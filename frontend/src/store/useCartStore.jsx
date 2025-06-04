@@ -1,0 +1,222 @@
+// store/useCartStore.jsx
+import { create } from "zustand";
+import { toast } from "sonner";
+import { api } from "../axios";
+import useAuthStore from "./useAuthStore";
+import { useOrderStore } from "./useOrderStore";
+
+const localStorageKey = "cart_items";
+let syncTimeout = null;
+
+const loadCartFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(localStorageKey);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveCartToStorage = (cartItems) => {
+  try {
+    localStorage.setItem(localStorageKey, JSON.stringify(cartItems));
+  } catch {}
+};
+
+const debounceSync = () => {
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(() => {
+    const user = useAuthStore.getState().user;
+    if (user && user._id) {
+      useCartStore.getState().syncCartToServer();
+    }
+  }, 1000);
+};
+
+export const useCartStore = create((set, get) => ({
+  cartItems: loadCartFromStorage(),
+  syncStatus: "idle", // idle | syncing | synced | failed
+
+  addToCart: (product) => {
+    if (!product || !product._id || !product.name || typeof product.price !== "number") {
+      toast.error("Invalid product cannot be added to cart");
+      return;
+    }
+
+    const existing = get().cartItems.find((item) => item._id === product._id);
+    let updated;
+
+    if (existing) {
+      updated = get().cartItems.map((item) =>
+        item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+      );
+      toast.success("Increased product quantity");
+    } else {
+      updated = [...get().cartItems, { ...product, quantity: 1 }];
+      toast.success("Added product to cart");
+    }
+
+    saveCartToStorage(updated);
+    set({ cartItems: updated });
+    debounceSync();
+  },
+
+  removeFromCart: (id) => {
+    const updated = get().cartItems.filter((item) => item._id !== id);
+    saveCartToStorage(updated);
+    set({ cartItems: updated });
+    toast.success("Removed item from cart");
+    debounceSync();
+  },
+
+  incrementQuantity: (id) => {
+    const updated = get().cartItems.map((item) =>
+      item._id === id ? { ...item, quantity: item.quantity + 1 } : item
+    );
+    saveCartToStorage(updated);
+    set({ cartItems: updated });
+    toast.success("Increased quantity");
+    debounceSync();
+  },
+
+  decrementQuantity: (id) => {
+    const item = get().cartItems.find((item) => item._id === id);
+    if (!item) return;
+    let updated;
+    if (item.quantity === 1) {
+      updated = get().cartItems.filter((item) => item._id !== id);
+      toast.success("Removed item from cart");
+    } else {
+      updated = get().cartItems.map((item) =>
+        item._id === id ? { ...item, quantity: item.quantity - 1 } : item
+      );
+      toast.success("Decreased quantity");
+    }
+    saveCartToStorage(updated);
+    set({ cartItems: updated });
+    debounceSync();
+  },
+
+  clearCart: () => {
+    saveCartToStorage([]);
+    set({ cartItems: [] });
+    toast.success("Cart cleared");
+    debounceSync();
+  },
+
+  getCartTotal: () => {
+    const items = get().cartItems;
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = items.reduce((sum, item) => sum + Math.floor(item.price || 0) * item.quantity, 0);
+    return { totalQuantity, totalPrice };
+  },
+
+  syncCartToServer: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user || !user._id) return;
+
+    try {
+      set({ syncStatus: "syncing" });
+
+      // Filter only valid cart items
+      const validItems = get().cartItems
+        .filter(
+          (item) =>
+            item &&
+            typeof item._id === "string" &&
+            typeof item.name === "string" &&
+            typeof item.price === "number" &&
+            item.quantity > 0
+        )
+        .map((item) => ({
+          _id: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image || ""
+        }));
+
+      if (validItems.length === 0) {
+        toast.warning("Cart is empty or contains invalid items");
+        return;
+      }
+
+      await api.post("/user/cart", { cart: validItems });
+
+      set({ syncStatus: "synced" });
+      toast.success("Cart synced with server");
+    } catch (err) {
+      set({ syncStatus: "failed" });
+      toast.error("Failed to sync cart with server");
+      console.error("Cart sync error:", err);
+    }
+  },
+
+  loadCartFromServer: async () => {
+  const user = useAuthStore.getState().user;
+  if (!user || !user._id) return;
+
+  try {
+    const res = await api.get("/user/cart");
+    const items = res.data.cart || [];
+
+    const prevItems = get().cartItems;
+    const isDifferent = JSON.stringify(prevItems) !== JSON.stringify(items);
+
+    saveCartToStorage(items);
+    set({ cartItems: items });
+
+    if (isDifferent && items.length > 0) {
+      toast.success("Cart loaded from server");
+    }
+  } catch (err) {
+    toast.error("Failed to load cart from server");
+    console.error(err);
+  }
+},
+
+checkout: async ({ items, totalAmount, paymentMethod, transactionId, additionalInfo = "", address, phoneNumber }) => {
+  const user = useAuthStore.getState().user;
+  if (!user || !user._id) {
+    toast.error("User not authenticated");
+    return;
+  }
+
+  if (!items?.length || !totalAmount || !paymentMethod || !transactionId) {
+    toast.error("Missing checkout data");
+    return;
+  }
+
+  try {
+    const res = await api.post("/user/checkout", {
+      items,
+      totalAmount,
+      paymentMethod,
+      transactionId,
+      additionalInfo,
+      address: address || user.address.find(a => a.isDefault) || {},
+      phoneNumber: phoneNumber || user.phoneNumber,
+    });
+
+    toast.success('Payment successful');
+    useCartStore.getState().clearCart();
+    return res.data;
+  } catch (err) {
+    console.error("Checkout failed:", err);
+    toast.error("Checkout failed");
+  }
+}
+
+
+
+}));
+
+// Sync cart before unload if user is authenticated
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    const user = useAuthStore.getState().user;
+    if (user && user._id) {
+      useCartStore.getState().syncCartToServer();
+    }
+  });
+}

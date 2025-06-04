@@ -1,0 +1,35 @@
+import React from 'react'
+import useAuthStore from '../store/useAuthStore';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+
+const Googlelogin = () => {
+    const navigate = useNavigate();
+    const { loginWithGoogle } = useAuthStore();
+  return (
+    <div>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+            const tokenId = credentialResponse.credential;
+            const result = await loginWithGoogle(tokenId);
+            
+            if (result.success) {
+                toast.success(result.message);
+                navigate('/');
+            } else {
+                toast.error(result.message);
+            }
+            }}
+            onError={() => {
+                toast.error('Google login failed');
+            }}
+            />
+        </GoogleOAuthProvider>
+    </div>
+  )
+}
+
+export default Googlelogin
