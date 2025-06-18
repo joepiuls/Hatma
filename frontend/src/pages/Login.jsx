@@ -7,14 +7,13 @@ import logo from "../assets/logo.png";
 import { LoaderCircle } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
 import Googlelogin from "./GoogleLogin";
-
-
+import { trackEvent } from "../utils/trackEvent";
 
 
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const {login, loading} = useAuthStore();
+  const {login, loading, user} = useAuthStore();
 
   const navigate = useNavigate();
 
@@ -27,6 +26,7 @@ const Login = () => {
   const onSubmit = async(data) => {
     const res = await login(data);
     if(res.success === true) {
+      await trackEvent('session', { action: 'login', userId: user._id, email: user.email });
       navigate('/');
       toast.success(res.message);
     } else{
@@ -37,7 +37,6 @@ const Login = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 relative pb-10">
-
       {/* Top Bar */}
       <div className="w-full bg-white py-4 px-6 flex justify-center items-center z-10">
         <header className="w-full max-w-6xl flex justify-between items-center">

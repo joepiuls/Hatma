@@ -75,3 +75,37 @@ const html = `
     res.status(500).json({ message: "Failed to send email" });
   }
 };
+
+export const sendRequestEmail = async (request) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  try {
+    const html = `
+      <h2>New ${!request.description ? 'Custom' : 'Item'} Request</h2>
+      <p><strong>Name:</strong> ${request.name}</p>
+      <p><strong>Email:</strong> ${request.email}</p>
+      ${request.phoneNumber ? `<p><strong>Phone Number:</strong> ${request.phoneNumber}</p>` : ''}
+      <p><strong>Description:</strong><br/>${request.description || request.message}</p>
+      ${request.budget ? `<p><strong>Budget:</strong> ${request.budget}</p>` : ''}
+      ${request.attachment ? `<p><strong>Attachment:</strong> <a href="${request.attachment}">${request.attachment}</a></p>` : ''}
+    `;
+
+    await transporter.sendMail({
+      from: `"Item Request Bot" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: 'New Item Request Submitted',
+      html,
+    });
+
+    console.log('Request email sent successfully.');
+  } catch (error) {
+    console.error('Failed to send request email:', error);
+    throw error; // or handle accordingly
+  }
+};

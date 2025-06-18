@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '../axios';
 import axios from 'axios';
+import { trackError } from '../utils/trackEvent';
 
 const useAuthStore = create(
   persist(
@@ -40,10 +41,18 @@ const useAuthStore = create(
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
           set({ error: errorMessage, loading: false });
+          trackError(errorMessage, {
+            action: 'signUp',
+            user: data.email,
+            additionalInfo: {
+              name: data.name
+            }
+          });
           return { 
             success: false, 
             message: errorMessage || 'Signup failed. Please try again.' 
           };
+          
         }
       },
 
@@ -69,6 +78,13 @@ const useAuthStore = create(
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
           set({ error: errorMessage, loading: false });
+          trackError(errorMessage, {
+            action: 'login',
+            user: data.email,
+            additionalInfo: {
+              name: data.name
+            }
+          });
           return { 
             success: false, 
             message: errorMessage || 'Login failed. Please check your credentials.' 
@@ -96,6 +112,13 @@ const useAuthStore = create(
         } catch (err) {
           const errorMessage = err.response?.data?.error || err.message;
           set({ error: errorMessage, loading: false });
+          trackError(errorMessage, {
+            action: 'loginWithGoogle',
+            user: data.email,
+            additionalInfo: {
+              name: data.name
+            }
+          });
           return {
             success: false,
             message: errorMessage || 'Google login failed. Please try again.',
@@ -127,6 +150,10 @@ const useAuthStore = create(
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
           set({ error: errorMessage, loading: false });
+          trackError(errorMessage, {
+            action: 'forgotPassword',
+            user: email
+          });
           return {
             success: false,
             message: errorMessage || 'Failed to send reset email.',
@@ -147,6 +174,10 @@ const useAuthStore = create(
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
           set({ error: errorMessage, loading: false });
+          trackError(errorMessage, {
+            action: 'resetPassword',
+            user: data.email
+          });
           return {
             success: false,
             message: errorMessage || 'Reset failed. Token may be invalid or expired.',

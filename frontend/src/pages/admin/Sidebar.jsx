@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import {
   PieChart,
   ShoppingBag,
@@ -13,9 +13,10 @@ import {
   ChevronRight,
   Settings
 } from 'lucide-react';
-import Logo from '../../assets/Logo.png'
+import Logo from '../../assets/Logo.png';
+import useAuthStore from '../../store/useAuthStore';
 const Sidebar = ({isCollapsed, setIsCollapsed}) => {
-  
+  const { user } = useAuthStore();
 
   const navigationItems = [
     { icon: <PieChart size={20} />, label: "Overview", path: "/admin"},
@@ -25,8 +26,8 @@ const Sidebar = ({isCollapsed, setIsCollapsed}) => {
     { icon: <CreditCard size={20} />, label: "Forms & Orders", path: "/admin/orders" },
     { icon: <BadgeInfo size={20} />, label: "Information", path: "/admin/info" },
     { icon: <BookOpen size={20} />, label: "Blog", path: "/admin/blog" },
-    { icon: <Users size={20} />, label: "HR", path: "/admin/hr" },
-    { icon: <Settings size={20} />, label: "Settings", path: "/admin/settings" }
+    // { icon: <Users size={20} />, label: "HR", path: "/admin/hr" },
+    // { icon: <Settings size={20} />, label: "Settings", path: "/admin/settings" }
   ];
 
   return (
@@ -34,13 +35,14 @@ const Sidebar = ({isCollapsed, setIsCollapsed}) => {
       {/* Logo/Collapse Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center">
- 
           {!isCollapsed ? (
-            <img src={Logo} alt='Logo'/>
+            <Link to="/" className="flex items-center">
+              <img src={Logo} alt='Logo'/>
+            </Link>
           ) : (
-        <div className="bg-gradient-to-r from-indigo-600 to-secondary w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl text-white">
-            HB
-          </div>
+            <div className="bg-gradient-to-r from-indigo-600 to-secondary w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl text-white">
+              HB
+            </div>
           )}
         </div>
         <button 
@@ -101,10 +103,10 @@ const Sidebar = ({isCollapsed, setIsCollapsed}) => {
             </div>
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
           </div>
-          {!isCollapsed && (
+          {!isCollapsed && user && (
             <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-medium text-gray-900 truncate">Hatma Admin</p>
-              <p className="text-xs text-gray-500 truncate">admin@hatma.com</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+              <p className="text-xs text-gray-500 truncate">{user.email}</p>
             </div>
           )}
         </div>

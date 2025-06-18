@@ -30,9 +30,9 @@ useEffect(() => {
       {/* === Left (Main Blog Content) === */}
       <div className="md:col-span-2 space-y-6 rounded-lg 
       p-10 text-justify border overflow-auto w-fit">
-        <h1 className='text-3xl font-bold capitalize'>{blog.blog.title}</h1>
+        <h1 className='text-3xl font-bold capitalize'>{blog?.blog?.title}</h1>
         <p className="leading-relaxed text-[17px]">
-         {blog.blog.content}
+         {blog?.blog?.body}
         </p>
       </div>
 
@@ -45,7 +45,7 @@ useEffect(() => {
             alt="Author"
             className="w-20 h-20 rounded-full border-2 border-[#4FC3F7]"
           />
-          <p className="text-sm font-medium uppercase tracking-widest">BY AMUDA ZULIAT</p>
+          <p className="text-sm font-medium uppercase tracking-widest">{blog?.blog?.author?.name}</p>
           <span className="text-gray-500 text-sm">Published on 18 June, 2024</span>
         </div>
 

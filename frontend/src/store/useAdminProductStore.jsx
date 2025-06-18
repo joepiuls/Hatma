@@ -4,23 +4,53 @@ import { toast } from "sonner";
 import { api } from "../axios";
 import { useProductStore } from "./useProductStore";
 
-export const useAdminProductStore = create(() => ({
+
+export const useAdminProductStore = create((set, get) => ({
+  loading: false,
+
   createProduct: async (product) => {
     try {
-      const newProduct = { ...product };
-      await api.post("/products", newProduct);
+      set({ loading: true });
+
+      const formData = new FormData();
+
+      // Append regular fields
+      for (const key in product) {
+        if (key === "variants" && typeof product[key] !== "string") {
+          formData.append(key, JSON.stringify(product[key]));
+        } else if (key !== "images") {
+          formData.append(key, product[key]);
+        }
+      }
+
+      // Append images
+      if (product.images && product.images.length > 0) {
+        for (const image of product.images) {
+          formData.append("images", image);
+        }
+      }
+
+      const response = await api.post("/admin/products", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const newProduct = response.data;
       const updated = [...useProductStore.getState().products, newProduct];
       useProductStore.setState({ products: updated });
+
       toast.success("Product created");
     } catch (err) {
       toast.error("Failed to create product");
       console.error(err);
+    } finally {
+      set({ loading: false });
     }
   },
 
   updateProduct: async (id, updates) => {
     try {
-      await api.put(`/products/${id}`, updates);
+      set({ loading: true });
+      await api.put(`/admin/products/${id}`, updates);
       const updated = useProductStore.getState().products.map((product) =>
         product._id === id ? { ...product, ...updates } : product
       );
@@ -29,39 +59,23 @@ export const useAdminProductStore = create(() => ({
     } catch (err) {
       toast.error("Failed to update product");
       console.error(err);
+    } finally {
+      set({ loading: false });
     }
   },
 
   deleteProduct: async (id) => {
     try {
-      await api.delete(`/products/${id}`);
+      set({ loading: true });
+      await api.delete(`/admin/products/${id}`);
       const updated = useProductStore.getState().products.filter((product) => product._id !== id);
       useProductStore.setState({ products: updated });
       toast.success("Product deleted");
     } catch (err) {
       toast.error("Failed to delete product");
       console.error(err);
+    } finally {
+      set({ loading: false });
     }
   },
-
-  generateDummyProducts: async () => {
-    const dummy = Array.from({ length: 10 }).map((_, i) => ({
-      name: `Product ${i + 1}`,
-      description: `This is a dummy product ${i + 1}`,
-      price: parseFloat((Math.random() * 100).toFixed(2)),
-      stock: Math.floor(Math.random() * 20) + 1,
-      category: i % 2 === 0 ? "Electronics" : "Books",
-      tags: ["featured", `tag${i + 1}`],
-      image: `https://picsum.photos/seed/product${i}/300/300`,
-      isFeatured: i % 3 === 0
-    }));
-    try {
-      await Promise.all(dummy.map(product => api.post("/admin/products", product)));
-      useProductStore.setState({ products: dummy });
-      toast.success("Dummy products added");
-    } catch (err) {
-      toast.error("Failed to add dummy products");
-      console.error(err);
-    }
-  }
 }));

@@ -5,8 +5,11 @@ import User from '../models/User.js';
 import Product from '../models/Product.js';
 import { sendOrderReceipt } from "../controllers/emailController.js";
 import { generateInvoicePDF } from '../utils/pdf.js'; 
+import AnalyticsEvents from '../models/AnalyticsEvents.js';
 import {nanoid} from 'nanoid';
 import dotenv from 'dotenv'
+import Project from '../models/Projects.js';
+import { createNotification } from '../services/notificationSevices.js';
 
 const router = express.Router();
 dotenv.config();
@@ -98,6 +101,59 @@ router.get('/products/:id', async (req, res) => {
   res.json(product);
 });
 
+router.patch('/products/:id/view', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+   
+    await AnalyticsEvents.create({
+      type: 'page_visit',
+      metadata: {
+        page: `/products/${id}`,
+        source: req.get('Referer') || 'direct',
+      },
+      timestamp: new Date()
+    });
+
+    res.status(200).json({ views: product.views });
+    
+  } catch (error) {
+    console.error('Error tracking product view:', error);
+    res.status(500).json({ error: 'Could not track product view' });
+  }
+});
+
+
+router.put('/projects/:id/view', async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    
+    res.json({
+      success: true,
+      views: project.views
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 router.post('/checkout', protect, async (req, res) => {
   const {
@@ -114,9 +170,29 @@ router.post('/checkout', protect, async (req, res) => {
 
   try {
     const reference = transactionId || `HTM-${nanoid(10)}`;
+
+    // ✅ Enrich each item with full product details including category
+    const itemsWithDetails = await Promise.all(
+      items.map(async item => {
+        const product = await Product.findById(item._id);
+        if (!product) {
+          throw new Error(`Product not found: ${item._id}`);
+        }
+
+        return {
+          _id: product._id,
+          name: product.name,
+          price: product.price,
+          quantity: item.quantity,
+          image: product.image || '',
+          category: product.category || 'Uncategorized'
+        };
+      })
+    );
+
     const order = new Order({
       user: req.user._id,
-      items,
+      items: itemsWithDetails,
       totalAmount,
       paymentMethod,
       transactionId,
@@ -124,20 +200,48 @@ router.post('/checkout', protect, async (req, res) => {
       paymentStatus: 'paid',
       address,
       phoneNumber,
-      additionalInfo,
+      additionalInfo
     });
 
     await order.save();
 
+
     req.user.cart = [];
     await req.user.save();
+
+    await createNotification({
+      type: 'order',
+      subtype: 'new',
+      message: `New order #${itemsWithDetails.length} for $${totalAmount}`,
+      referenceId: reference,
+      priority: 1,
+      context: {
+        customer: req.user.email,
+        items: itemsWithDetails.length
+      }
+    });
+
+
+    order.items.forEach(async item => {
+      const product = await Product.findById(item.product);
+      if (product.quantity < 10) {
+        await createNotification({
+          type: 'inventory',
+          subtype: 'low-stock',
+          message: `Low stock: ${product.name} (${product.quantity} left)`,
+          referenceId: product._id,
+          priority: 2
+        });
+      }
+    });
 
     res.status(201).json(order);
   } catch (err) {
     console.error("Checkout error:", err);
-    res.status(500).json({ message: 'Checkout failed' });
+    res.status(500).json({ message: 'Checkout failed', error: err.message });
   }
 });
+
 
 router.get('/orders', protect, async (req, res) => {
   try {

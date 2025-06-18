@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Category from '../components/Category';
 import { motion } from 'framer-motion';
+import { trackEvent } from '../utils/trackEvent';
 
 function CACRegisteration() {
   const location = useLocation();
+  const [text, setText] = useState('');
 
   const registrationServices = [
     {
@@ -46,6 +48,17 @@ function CACRegisteration() {
       category: 'MARKETING'
     }
   ];
+
+  const handleClick = ()=>{
+      const phone = "+23409025249323"; 
+    const message = encodeURIComponent(text);
+      trackEvent('conversion', {method:'whatsApplink'});
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    }
+
+   useEffect(()=>{
+      trackEvent('page_visit', {page: 'CAC-registeration'});
+    }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -102,7 +115,12 @@ function CACRegisteration() {
             <div className="text-4xl mb-4">{service.icon}</div>
             <h3 className="text-xl font-bold text-[#1D1849] mb-3">{service.title}</h3>
             <p className="text-gray-600 mb-6">{service.description}</p>
-            <button className="w-full bg-[#1D1849] text-white py-2 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
+            <button 
+            onClick={()=>{
+              setText('I want to get started with CAC registeration');
+              handleClick()
+            }}
+            className="w-full bg-[#1D1849] text-white py-2 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
               Get Started
             </button>
           </div>
@@ -115,7 +133,12 @@ function CACRegisteration() {
           <h2 className="text-2xl md:text-3xl font-bold text-[#1D1849] mb-6">
             Learn more about the many ways we can support your business
           </h2>
-          <button className="bg-[#1D1849] text-white font-bold py-3 px-8 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
+          <button 
+          onClick={()=>{
+            setText("Hello I want to book for a consultation");
+            handleClick()
+          }}
+          className="bg-[#1D1849] text-white font-bold py-3 px-8 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
             BOOK A CONSULTATION
           </button>
         </div>

@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Category from '../components/Category';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { trackEvent } from '../utils/trackEvent';
+
 
 function HatmaPrime() {
   const [openAccordion, setOpenAccordion] = useState(0);
   const location = useLocation();
+  const [text, setText] = useState("Hello, I am interested in Hatma Prime services. Please provide more information.");
 
   
+  const handleClick = ()=>{
+      const phone = "+23409025249323"; 
+    const message = encodeURIComponent(text);
+      trackEvent('conversion', {method:'whatsApplink'});
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    }
+
+    useEffect(()=>{
+      trackEvent('page_visit', {page: 'Hatma-prime'});
+    }, [])
 
   const services = [
     'Brand Audit and Optimization',
@@ -164,7 +177,9 @@ function HatmaPrime() {
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 px-4">
           Want to elevate your brand? Become our partner today.
         </h2>
-        <button className="mt-4 md:mt-6 bg-[#FFA500] hover:bg-[#E69500] text-white font-semibold md:font-bold py-2 px-4 md:py-3 md:px-6 rounded-md transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+        <button 
+        onClick={handleClick}
+        className="mt-4 md:mt-6 bg-[#FFA500] hover:bg-[#E69500] text-white font-semibold md:font-bold py-2 px-4 md:py-3 md:px-6 rounded-md transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
           GET STARTED
         </button>
       </div>

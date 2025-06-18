@@ -1,9 +1,15 @@
 import RibbonText from './RibbonText';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
+import { trackConversion } from '../utils/trackEvent';
 
 const Hero = () => {
   const {user} = useAuthStore();
+
+  const handleClick = () => {
+    trackConversion('sign-up', 1);
+  };
+  
   return (
     <section className="relative bg-[#170E3D] text-white py-24 flex flex-col items-center text-center">
       {/* Hero Content */}
@@ -18,7 +24,9 @@ const Hero = () => {
         </p>
 
         {!user && <Link to={"/signup"}>
-        <button className="mt-8 px-20 py-2 bg-[#F3AB14] text-black font-semibold rounded-lg shadow-md hover:bg-[#E2A010] transition-all">
+        <button
+          onClick={handleClick}
+          className="mt-8 px-20 py-2 bg-[#F3AB14] text-black font-semibold rounded-lg shadow-md hover:bg-[#E2A010] transition-all">
           Sign up
         </button>
         </Link>}

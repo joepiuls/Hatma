@@ -1,27 +1,24 @@
 import React, { useState } from 'react';
-import { Phone, MapPin, Facebook, Linkedin, Instagram } from 'lucide-react';
-
+import { Phone, MapPin, Facebook, Linkedin, Instagram } from 'lucide-react'
+import { useForm } from 'react-hook-form';
+import useSubmitStore from '../../store/useSubmitStore';
+import { trackFormSubmission } from '../../utils/trackEvent';
 function App() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-    budget: ''
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+ 
+  const {
+      register,
+      handleSubmit,
+      reset,
+      formState: { errors }
+    } = useForm();
+    
+    const {loading, submitCustomRequest} = useSubmitStore();
+  
+    const onSubmit = async(data) => {
+      await submitCustomRequest(data);
+      trackFormSubmission('contact-form', data);
+      reset();
+    };
 
   return (
     <div className="min-h-screen bg-white">
@@ -41,74 +38,55 @@ function App() {
               <div className="absolute inset-0 bg-purple-100 opacity-40 rounded-lg"></div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="e.g John doe"
+                  {...register("name", { required: 'Name is required' })}
+                  placeholder="Name"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
+                {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
                   type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="e.g john@example.com"
+                  {...register("email", { required: 'Email is required' })}
+                  placeholder="Email"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
+                {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
                 <input
                   type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="+1 (555) 000-0000"
+                  {...register("phone", { required: 'Phone number is required' })}
+                  placeholder="Phone number"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
+                {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your message</label>
                 <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
+                  {...register("message", { required: 'Message is required' })}
                   rows="4"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Tell us about your project..."
+                  placeholder="Your message"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 ></textarea>
-              </div>
+                {errors.message && <p className="text-red-500 text-sm">{errors.message.message}</p>}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Budget</label>
                 <input
                   type="text"
-                  name="budget"
-                  value={formData.budget}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="$5000"
+                  {...register("budget", { required: 'Budget is required' })}
+                  placeholder="Your Budget"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
+                {errors.budget && <p className="text-red-500 text-sm">{errors.budget.message}</p>}
 
-              <button
-                type="submit"
-                className="w-full bg-orange-500 text-white py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors font-medium"
-              >
-                Submit
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-secondary flex items-center justify-center text-white py-3 rounded-lg hover:bg-[#e67a00] transition-colors"
+                >
+                 {loading ? <Loader className='animate-spin text-center' /> : ' Contact Us'}
+                </button>
+              </form>
           </div>
         </div>
       </section>

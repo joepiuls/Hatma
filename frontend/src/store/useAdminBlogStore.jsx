@@ -1,71 +1,74 @@
-// store/useAdminBlogStore.jsx
 import { create } from "zustand";
 import { toast } from "sonner";
 import { api } from "../axios";
 import { useBlogStore } from "./useBlogStore";
-import { faker } from '@faker-js/faker';
 
 export const useAdminBlogStore = create((set, get) => ({
   blogs: useBlogStore.getState().blogs || [],
+  loading:false,
 
-  createBlog: async (blog) => {
+  createBlog: async (formData) => {
     try {
-      const newBlog = { ...blog, _id: uuid() };
-      await api.post("/blogs", newBlog);
-      const updated = [...useBlogStore.getState().blogs, newBlog];
-      useBlogStore.setState({ blogs: updated });
-      toast.success("Blog created");
-    } catch (err) {
-      toast.error("Failed to create blog");
-      console.error(err);
+      set({ loading: true });
+
+      const response = await api.post('/admin/blogs', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Important for file upload
+        },
+      });
+
+      toast.success('Blog created');
+    } catch (error) {
+      console.error('Create blog error:', error.response?.data || error.message);
+        toast.error(error.message)
+    } finally {
+      set({ loading: false });
     }
   },
 
-  updateBlog: async (id, updates) => {
-    try {
-      await api.put(`/blogs/${id}`, updates);
-      const updated = useBlogStore.getState().blogs.map((b) =>
-        b._id === id ? { ...b, ...updates } : b
-      );
-      useBlogStore.setState({ blogs: updated });
-      toast.success("Blog updated");
-    } catch (err) {
-      toast.error("Failed to update blog");
-      console.error(err);
-    }
-  },
+  updateBlog: async (id, blogData) => {
+  set({ loading: true });
+  try {
+    const formData = new FormData();
+
+    Object.entries(blogData).forEach(([key, value]) => {
+      if (key === 'images') {
+        value.forEach((file) => formData.append('images', file));
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    const { data: updatedBlog } = await api.put(`/admin/blogs/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    const updated = useBlogStore.getState().blogs.map((b) =>
+      b._id === id ? updatedBlog : b
+    );
+    useBlogStore.setState({ blogs: updated });
+    toast.success('Blog updated');
+  } catch (err) {
+    toast.error('Failed to update blog');
+    console.error(err);
+  } finally {
+    set({ loading: false });
+  }
+},
+
 
   deleteBlog: async (id) => {
+    set({loading:true})
     try {
-      await api.delete(`/blogs/${id}`);
+      await api.delete(`/admin/blogs/${id}`);
       const updated = useBlogStore.getState().blogs.filter((b) => b._id !== id);
       useBlogStore.setState({ blogs: updated });
       toast.success("Blog deleted");
+      set({loading:false})
     } catch (err) {
       toast.error("Failed to delete blog");
+      set({loading:false})
       console.error(err);
     }
   },
-
-  generateDummyBlogs: async () => {
-    const dummy = Array.from({ length: 10 }).map(() => ({
-      title: faker.lorem.sentence(6),
-      heading: faker.lorem.words(3),
-      content: faker.lorem.paragraphs(3),
-      author: faker.name.fullName(),
-      tags: Array.from({ length: 3 }, () => faker.lorem.word()),
-      category: faker.helpers.arrayElement(['Tech', 'Design', 'Development', 'AI']),
-      image: faker.image.urlPicsumPhotos(),
-      createdAt: faker.date.recent().toISOString()
-    }));
-
-    try {
-      await Promise.all(dummy.map(blog => api.post("/admin/blogs", blog)));
-      set({ blogs: dummy });
-      toast.success("Fake blogs added");
-    } catch (err) {
-      toast.error("Failed to add fake blogs");
-      console.error(err);
-    }
-  }
 }));

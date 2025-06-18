@@ -3,6 +3,7 @@ import useAuthStore from '../store/useAuthStore';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { trackEvent } from '../utils/trackEvent';
 
 
 const Googlelogin = () => {
@@ -17,6 +18,7 @@ const Googlelogin = () => {
             const result = await loginWithGoogle(tokenId);
             
             if (result.success) {
+                trackEvent('session', { session: 'Login', userId: user._id });
                 toast.success(result.message);
                 navigate('/');
             } else {

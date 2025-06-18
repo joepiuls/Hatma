@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { OAuth2Client } from 'google-auth-library';
 import nodemailer from 'nodemailer';
+import { createNotification } from '../services/notificationSevices.js';
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
@@ -22,6 +23,18 @@ router.post('/register', async (req, res) => {
     // ✅ Convert to plain object and remove password
     const userWithoutPassword = user.toObject();
     delete userWithoutPassword.password;
+
+    await createNotification({
+          type: 'user',
+          subtype: 'new',
+          message: `New user registered: ${name}`,
+          referenceId: user._id,
+          priority: 1,
+          context: {
+            customer: email,
+            items: 1
+          }
+        });
 
     return res.status(201).json({ token, user: userWithoutPassword });
   } catch (err) {

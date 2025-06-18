@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Category from '../components/Category';
 import { useLocation } from 'react-router-dom';
+import { trackEvent } from '../utils/trackEvent';
 
 function BrandDevelopment() {
     const location  = useLocation();
@@ -50,6 +51,20 @@ function BrandDevelopment() {
     { id: 5, title: 'PROJECT TITLE', category: 'MARKETING' },
     { id: 6, title: 'PROJECT TITLE', category: 'MARKETING' }
   ];
+
+  const text = `Hello, I am interested in your Brand Development services. Please provide more information.`;
+  
+
+  useEffect(()=>{
+    trackEvent('page_visit', {page: 'Brand-development'});
+  }, [])
+
+  const handleClick = () => {
+    const phone = "+23409025249323"; 
+    const message = encodeURIComponent(text);
+    trackEvent('conversion', {method:'whatsApplink'});
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -121,7 +136,9 @@ function BrandDevelopment() {
                   </div>
                 ))}
               </div>
-              <button className="mt-8 w-full bg-[#1D1849] text-white py-2 rounded-md hover:bg-[#2a2468] transition-colors">
+              <button 
+              onClick={handleClick}
+              className="mt-8 w-full bg-[#1D1849] text-white py-2 rounded-md hover:bg-[#2a2468] transition-colors">
                 Get Started
               </button>
             </motion.div>
@@ -134,7 +151,9 @@ function BrandDevelopment() {
         <h2 className="text-3xl font-bold text-white mb-8">
           Want to elevate your brand? Become our partner today.
         </h2>
-        <button className="bg-orange-500 text-white px-8 py-3 rounded-md hover:bg-orange-600 transition-colors font-medium">
+        <button 
+          onClick={handleClick}
+          className="bg-orange-500 text-white px-8 py-3 rounded-md hover:bg-orange-600 transition-colors font-medium">
           GET STARTED
         </button>
       </div>

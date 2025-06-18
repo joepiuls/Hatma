@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useBlogStore } from '../store/useBlogStore';
 import { useEffect, useState } from 'react';
+import { trackEvent } from '../utils/trackEvent';
 
 export default function BlogSection() {
   const { blogs, fetchBlogs, searchBlogs, clearSearch, searchResults } = useBlogStore();
@@ -8,6 +9,7 @@ export default function BlogSection() {
   const [categoryFilter, setCategoryFilter] = useState('All');
 
   useEffect(() => {
+    trackEvent('page_visit', {page: 'Blog'});
     fetchBlogs();
   }, []);
 
@@ -43,7 +45,7 @@ export default function BlogSection() {
                 </div>
               </div>
               <h3 className="text-2xl mt-4 font-bold text-gray-800">{recentBlog.title}</h3>
-              <p className="text-gray-600 mt-2">{recentBlog.content?.slice(0, 120)}...</p>
+              <p className="text-gray-600 mt-2">{recentBlog?.body?.slice(0, 120)}...</p>
             </Link>
           </div>
         )}
@@ -81,7 +83,7 @@ export default function BlogSection() {
                 <div className="p-4">
                   <p className="text-sm text-gray-500">{blog.category}</p>
                   <h3 className="text-lg font-bold text-gray-900">{blog.title}</h3>
-                  <p className="text-gray-700 mt-1">{blog.content?.slice(0, 80)}...</p>
+                  <p className="text-gray-700 mt-1">{blog?.body?.slice(0, 80)}...</p>
                 </div>
               </div>
             </Link>

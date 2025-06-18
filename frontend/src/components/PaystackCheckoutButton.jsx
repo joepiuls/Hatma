@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { api } from '../axios';
 import { useState } from 'react';
 import { useOrderStore } from '../store/useOrderStore';
+import { trackEvent } from '../utils/trackEvent';
 
 const PaystackCheckoutButton = ({ additionalInfo = "" }) => {
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ const PaystackCheckoutButton = ({ additionalInfo = "" }) => {
         if (!order?._id) throw new Error("Invalid order");
 
         setOrder(order);
-
+        trackEvent('sale', {orderId: order._id});
         // Send receipt
         try {
           await api.post('/user/receipt', {

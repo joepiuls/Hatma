@@ -1,292 +1,493 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useOverviewStore } from "../../store/useOverviewStore";
+import {
+  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area,
+} from "recharts";
 import { 
-  FaArrowUp, FaArrowDown, FaUser, FaShoppingBag, 
-  FaCalendar, FaEllipsisV, FaClipboard, FaCircle 
-} from "react-icons/fa";
+  Users, 
+  MousePointer, 
+  ShoppingCart, 
+  Eye, 
+  Package, 
+  FileText, 
+  DollarSign, 
+  Activity,
+  Globe,
+  TrendingUp,
+  TrendingDown,
+  Crown,
+  ArrowUpRight,
+  ArrowDownRight,
+  BarChart3
+} from "lucide-react";
 
-const Overview = () => {
-  // Stats cards data
-  const statsCards = [
-    { title: "Views", value: "7,265", change: "+11.01%", isPositive: true, bgColor: "bg-indigo-100" },
-    { title: "Visits", value: "3,671", change: "-0.03%", isPositive: false, bgColor: "bg-blue-100" },
-    { title: "New Orders", value: "156", change: "+15.03%", isPositive: true, bgColor: "bg-indigo-100" },
-    { title: "Subscribers", value: "2,318", change: "+6.08%", isPositive: true, bgColor: "bg-blue-100" },
-  ];
+export default function Overview() {
+  const { overview, fetchOverview, isLoading, error } = useOverviewStore();
 
-  // Services data
-  const servicesData = [
-    { name: "Hatma Prime", value: 84, color: "bg-indigo-500" },
-    { name: "Design", value: 147, color: "bg-teal-400" },
-    { name: "Cac Reg", value: 105, color: "bg-gray-800" },
-    { name: "Branding", value: 168, color: "bg-blue-400" },
-    { name: "Marketing", value: 63, color: "bg-blue-300" },
-    { name: "Other", value: 126, color: "bg-green-400" },
-  ];
 
-  // Sales data
-  const salesData = [
-    { category: "Laptop", percentage: "52.1%", color: "bg-indigo-500" },
-    { category: "Accessories", percentage: "22.8%", color: "bg-blue-400" },
-    { category: "Phone", percentage: "13.9%", color: "bg-teal-400" },
-    { category: "Other", percentage: "11.2%", color: "bg-gray-400" },
-  ];
+  useEffect(() => {
+    fetchOverview();
+  }, [fetchOverview]);
 
-  // Form submissions data
-  const formSubmissions = [
-    { id: 1, name: "Natali Craig", phoneNo: "#CM9801", email: "Meadow Lane Oakland", date: "Just now", type: "Landing Page", status: "Complete" },
-    { id: 2, name: "Kate Morrison", phoneNo: "#CM9802", email: "Larry San Francisco", date: "A minute ago", type: "CRM Admin pages", status: "Complete" },
-    { id: 3, name: "Drew Cano", phoneNo: "#CM9803", email: "Bagwell Avenue Ocala", date: "1 hour ago", type: "Client Project", status: "Pending" },
-    { id: 4, name: "Orlando Diggs", phoneNo: "#CM9804", email: "Washburn Baton Rouge", date: "Yesterday", type: "Admin Dashboard", status: "Pending" },
-    { id: 5, name: "Andi Lane", phoneNo: "#CM9805", email: "Nest Lane Olivette", date: "Feb 2, 2023", type: "App Landing Page", status: "In Progress", highlighted: true },
-    { id: 6, name: "Natali Craig", phoneNo: "#CM9801", email: "Meadow Lane Oakland", date: "Just now", type: "Landing Page", status: "In Progress" },
-    { id: 7, name: "Kate Morrison", phoneNo: "#CM9802", email: "Larry San Francisco", date: "A minute ago", type: "CRM Admin pages", status: "In Progress" },
-    { id: 8, name: "Drew Cano", phoneNo: "#CM9803", email: "Bagwell Avenue Ocala", date: "1 hour ago", type: "Client Project", status: "In Progress" },
-    { id: 9, name: "Orlando Diggs", phoneNo: "#CM9804", email: "Washburn Baton Rouge", date: "Yesterday", type: "Admin Dashboard", status: "In Progress" },
-    { id: 10, name: "Andi Lane", phoneNo: "#CM9805", email: "Nest Lane Olivette", date: "Feb 2, 2023", type: "App Landing Page", status: "In Progress" },
-  ];
+    const {
+    sessions,
+    conversions,
+    serviceRequests,
+    pageViews,
+    totalProductViews,
+    totalUsers,
+    totalSales,
+    totalTransactions,
+    trafficSources,
+    totalRevenue,
+    totalUser,
+    topPages,
+    totalProducts,
+    totalBlogs,
+    userStats,
+    blogViewTrends,
+    productSalesTrends,
+    mostViewedProduct,
+    leastViewedProduct,
+    mostViewedBlog,
+    leastViewedBlog,
+    blogViews,
+  } = overview || {};
+
+  console.log(overview);
+  
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-6">
+        <div className="text-center text-red-600 p-8">
+          <p className="text-lg font-semibold">Error loading dashboard</p>
+          <p className="text-sm mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-wrap w-full items-start gap-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-        {statsCards.map((card, index) => (
-          <div key={index} className={`rounded-xl shadow-md p-6 ${card.bgColor}`}>
-            <h3 className="text-sm font-normal text-gray-700">{card.title}</h3>
-            <div className="flex justify-between items-center mt-2">
-              <div className="text-2xl font-semibold text-gray-900">{card.value}</div>
-              <div className="flex items-center gap-1">
-                <span className={`text-xs ${card.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                  {card.change}
-                </span>
-                {card.isPositive ? 
-                  <FaArrowUp className="text-green-600 text-xs" /> : 
-                  <FaArrowDown className="text-red-600 text-xs" />
-                }
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Dashboard Overview
+            </h1>
+            <p className="text-gray-600 mt-2">Monitor your business performance at a glance</p>
           </div>
-        ))}
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-        {/* Total Users Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-sm font-medium text-gray-900">Total Users</h2>
-          <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-2">
-            <span>visits over time</span>
-            <span>Bounce Rate</span>
-            <span className="text-gray-300">|</span>
-            <div className="flex items-center gap-1">
-              <FaCircle className="text-blue-500 text-xs" />
-              <span>New Users</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <FaCircle className="text-indigo-500 text-xs" />
-              <span>Existing users</span>
-            </div>
-          </div>
-          
-          {/* Chart */}
-          <div className="mt-4 h-64 flex items-end gap-4 justify-between">
-            {[...Array(7)].map((_, i) => (
-              <div key={i} className="flex flex-col items-center flex-1">
-                <div className="flex items-end justify-center gap-1 w-full">
-                  <div className="w-4 bg-blue-400 rounded-t" style={{ height: `${30 + Math.random() * 70}%` }}></div>
-                  <div className="w-4 bg-indigo-500 rounded-t" style={{ height: `${40 + Math.random() * 60}%` }}></div>
-                </div>
-                <span className="text-xs text-gray-500 mt-2">{['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'][i]}</span>
-              </div>
-            ))}
+          <div className="flex items-center space-x-2 bg-white rounded-full px-4 py-2 shadow-sm border">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-600">Live Data</span>
           </div>
         </div>
 
-        {/* Services Requested Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-sm font-medium text-gray-900">Services requested</h2>
-          
-          {/* Bar Chart */}
-          <div className="mt-4 h-48 flex items-end gap-4 justify-between">
-            {servicesData.map((service, i) => (
-              <div key={i} className="flex flex-col items-center flex-1">
-                <div 
-                  className={`w-8 ${service.color} rounded-t`} 
-                  style={{ height: `${service.value / 2}px` }}
-                ></div>
-                <span className="text-xs text-gray-500 mt-2">{service.name}</span>
-              </div>
-            ))}
-          </div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <StatCard 
+            label="Total Sessions" 
+            value={sessions?.value?.toLocaleString() || '0'} 
+            icon={<Activity className="w-6 h-6" />}
+            color="blue"
+            trend={Number(sessions?.trend) || 0}
+          />
+          <StatCard 
+            label="Conversions" 
+            value={conversions?.value?.toLocaleString() || '0'} 
+            icon={<TrendingUp className="w-6 h-6" />}
+            color="green"
+            trend={Number(conversions?.trend) || 0}
+          />
+          <StatCard 
+            label="Service Requests" 
+            value={serviceRequests?.value?.toLocaleString() || '0'} 
+            icon={<MousePointer className="w-6 h-6" />}
+            color="purple"
+            trend={Number(serviceRequests?.trend) || 0}
+          />
+          <StatCard 
+            label="Page Views" 
+            value={pageViews?.value?.toLocaleString() || '0'} 
+            icon={<Eye className="w-6 h-6" />}
+            color="indigo"
+            trend={Number(pageViews?.trend) || 0}
+          />
+          <StatCard 
+            label="Product Views" 
+            value={totalProductViews?.value?.toLocaleString() || '0'} 
+            icon={<Package className="w-6 h-6" />}
+            color="orange"
+            trend={Number(totalProductViews?.trend) || 0}
+          />
         </div>
-      </div>
 
-      {/* Additional Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-        {/* Services Requested Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-sm font-medium text-gray-900">Services requested</h2>
-          
-          {/* Bar Chart */}
-          <div className="mt-4 h-48 flex items-end gap-4 justify-between">
-            {servicesData.map((service, i) => (
-              <div key={i} className="flex flex-col items-center flex-1">
-                <div 
-                  className={`w-8 ${service.color} rounded-t`} 
-                  style={{ height: `${service.value / 2}px` }}
-                ></div>
-                <span className="text-xs text-gray-500 mt-2">{service.name}</span>
-              </div>
-            ))}
-          </div>
+        {/* Secondary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <StatCard 
+            label="Total Products" 
+            value={totalProducts || '0'} 
+            icon={<Package className="w-5 h-5" />}
+            color="gray"
+            compact
+          />
+          <StatCard 
+            label="Total Blogs" 
+            value={totalBlogs || '0'} 
+            icon={<FileText className="w-5 h-5" />}
+            color="gray"
+            compact
+          />
+          <StatCard 
+            label="Total Users" 
+            value={totalUser} 
+            icon={<Users className="w-5 h-5" />}
+            color="gray"
+            compact
+          />
+          <StatCard 
+            label="Monthly Total Revenue" 
+            value={`₦${totalSales?.totalRevenue?.value?.toLocaleString() || '0'}`} 
+            icon={<DollarSign className="w-5 h-5" />}
+            color="emerald"
+            compact
+          />
+
+          <StatCard 
+            label="Overall Total Revenue" 
+            value={`₦${totalRevenue.toLocaleString() || '0'}`} 
+            icon={<DollarSign className="w-5 h-5" />}
+            color="emerald"
+            compact
+          />
+
+          <StatCard 
+            label="Monthly Transactions" 
+            value={totalSales?.totalTransactions?.value?.toLocaleString() || '0'} 
+            icon={<ShoppingCart className="w-5 h-5" />}
+            color="gray"
+            compact
+          />
+           <StatCard 
+            label="Total Transactions" 
+            value={totalTransactions?.toLocaleString() || '0'} 
+            icon={<ShoppingCart className="w-5 h-5" />}
+            color="gray"
+            compact
+          />
         </div>
 
-        {/* Total Sales Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-sm font-medium text-gray-900">Total Sales</h2>
-          
-          <div className="flex flex-col md:flex-row items-center gap-6 mt-4">
-            {/* Pie Chart */}
-            <div className="relative w-40 h-40 rounded-full bg-gray-200 border-8 border-indigo-500 overflow-hidden">
-              <div className="absolute inset-0 bg-blue-500" style={{ clipPath: "polygon(50% 50%, 100% 0, 100% 100%)" }}></div>
-              <div className="absolute inset-0 bg-teal-400" style={{ clipPath: "polygon(50% 50%, 100% 100%, 0 100%)" }}></div>
-              <div className="absolute inset-0 bg-gray-400" style={{ clipPath: "polygon(50% 50%, 0 100%, 0 0)" }}></div>
-            </div>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <ChartSection 
+            title="Blog View Trends" 
+            data={blogViewTrends || []} 
+            dataKey="views"
+            color="#3B82F6"
+            icon={<BarChart3 className="w-5 h-5" />}
+          />
+          <ChartSection 
+            title="Product Sales Trends" 
+            data={productSalesTrends || []} 
+            dataKey="totalAmount"
+            color="#10B981"
+            icon={<TrendingUp className="w-5 h-5" />}
+            prefix="₦"
+          />
+        </div>
 
-            <div className="flex-1">
-              {salesData.map((item, i) => (
-                <div key={i} className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 ${item.color} rounded-full`}></div>
-                    <span className="text-sm text-gray-700">{item.category}</span>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <ChartSection 
+            title="User Registrations Over Time" 
+            data={userStats || []} 
+            dataKey="count"
+            color="#8B5CF6"
+            icon={<Users className="w-5 h-5" />}
+            chartType="area"
+          />
+          
+          {/* Traffic Sources & Top Pages */}
+          <div className="grid grid-cols-1 gap-6">
+            <Section title="Top Traffic Sources" icon={<Globe className="w-5 h-5" />}>
+              <div className="space-y-3">
+                {trafficSources?.map((src, index) => (
+                  <div key={src._id} className="flex items-center justify-between p-3 bg-white rounded-lg border hover:shadow-sm transition-shadow">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-3 h-3 rounded-full ${getSourceColor(index)}`}></div>
+                      <span className="font-medium text-gray-900">{src._id}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-semibold text-gray-900">{src.count.toLocaleString()}</span>
+                      <p className="text-xs text-gray-500">visits</p>
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{item.percentage}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+                ))}
+              </div>
+            </Section>
 
-      {/* Forms Submitted Table */}
-      <div className="w-full bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-sm font-medium text-gray-900 mb-4">Forms submitted</h2>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4" />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {formSubmissions.map((sub) => (
-                <tr key={sub.id} className={sub.highlighted ? "bg-gray-50" : ""}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <span className="text-sm font-medium text-indigo-800">{sub.name.charAt(0)}</span>
+            <Section title="Top Pages" icon={<Eye className="w-5 h-5" />}>
+              <div className="space-y-3">
+                {topPages?.map((page, index) => (
+                  <div key={page._id} className="flex items-center justify-between p-3 bg-white rounded-lg border hover:shadow-sm transition-shadow">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold ${getPageColor(index)}`}>
+                        {index + 1}
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{sub.name}</div>
-                      </div>
+                      <span className="font-medium text-gray-900 font-mono text-sm">{page._id}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sub.phoneNo}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="text-sm text-gray-900">{sub.email}</span>
-                      {sub.highlighted && <FaClipboard className="ml-1 text-gray-500 text-sm" />}
+                    <div className="text-right">
+                      <span className="text-lg font-semibold text-gray-900">{page.count.toLocaleString()}</span>
+                      <p className="text-xs text-gray-500">views</p>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <FaCalendar className="text-gray-500 text-sm mr-1" />
-                      <span className="text-sm text-gray-900">{sub.date}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sub.type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      sub.status === 'Complete' ? 'bg-green-100 text-green-800' : 
-                      sub.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      <FaCircle className={`mr-1 text-xs ${
-                        sub.status === 'Complete' ? 'text-green-500' : 
-                        sub.status === 'Pending' ? 'text-yellow-500' : 
-                        'text-blue-500'
-                      }`} />
-                      {sub.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {sub.highlighted && (
-                      <button className="text-gray-500 hover:text-gray-700">
-                        <FaEllipsisV />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
-          <div className="flex-1 flex justify-between sm:hidden">
-            <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              Previous
-            </button>
-            <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              Next
-            </button>
+                  </div>
+                ))}
+              </div>
+            </Section>
           </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  <span className="sr-only">Previous</span>
-                  <FaArrowUp className="transform rotate-90 h-4 w-4" />
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
-                  1
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  2
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  3
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  4
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  5
-                </button>
-                <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  <span className="sr-only">Next</span>
-                  <FaArrowUp className="transform -rotate-90 h-4 w-4" />
-                </button>
-              </nav>
-            </div>
+        </div>
+
+        {/* Most & Least Viewed */}
+        <Section title="Performance Insights" icon={<Crown className="w-5 h-5" />}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <InsightCard
+              title="Most Viewed Product"
+              name={mostViewedProduct?.name || "N/A"}
+              value={`${mostViewedProduct?.views || 0} views`}
+              type="product"
+              isTop={true}
+            />
+            <InsightCard
+              title="Least Viewed Product"
+              name={leastViewedProduct?.name || "N/A"}
+              value={`${leastViewedProduct?.views || 0} views`}
+              type="product"
+              isTop={false}
+            />
+            <InsightCard
+              title="Most Viewed Blog"
+              name={mostViewedBlog?.title || "N/A"}
+              value={`${mostViewedBlog?.views || 0} views`}
+              type="blog"
+              isTop={true}
+            />
+            <InsightCard
+              title="Least Viewed Blog"
+              name={leastViewedBlog?.title || "N/A"}
+              value={`${leastViewedBlog?.views || 0} views`}
+              type="blog"
+              isTop={false}
+            />
+          </div>
+        </Section>
+      </div>
+    </div>
+  );
+}
+
+// Utility Components
+
+
+
+function StatCard({ label, value, icon, color, trend, compact }) {
+  const colorClasses = {
+    blue: 'from-blue-500 to-blue-600 bg-blue-50 text-blue-600',
+    green: 'from-green-500 to-green-600 bg-green-50 text-green-600',
+    purple: 'from-purple-500 to-purple-600 bg-purple-50 text-purple-600',
+    indigo: 'from-indigo-500 to-indigo-600 bg-indigo-50 text-indigo-600',
+    orange: 'from-orange-500 to-orange-600 bg-orange-50 text-orange-600',
+    emerald: 'from-emerald-500 to-emerald-600 bg-emerald-50 text-emerald-600',
+    gray: 'from-gray-500 to-gray-600 bg-gray-50 text-gray-600',
+  };
+
+  const bgClass = colorClasses[color] || colorClasses.gray;
+
+  return (
+    <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 overflow-hidden">
+      <div className={`p-${compact ? '4' : '6'} relative`}>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className={`text-${compact ? 'xs' : 'sm'} font-medium text-gray-600 mb-1`}>{label}</p>
+            <p className={`text-${compact ? 'xl' : '2xl'} font-bold text-gray-900 mb-2`}>{value}</p>
+            {trend !== undefined && !compact && (
+              <div className="flex items-center space-x-1">
+                {trend > 0 ? (
+                  <ArrowUpRight className="w-4 h-4 text-green-500" />
+                ) : (
+                  <ArrowDownRight className="w-4 h-4 text-red-500" />
+                )}
+                <span className={`text-sm font-medium ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(trend)}%
+                </span>
+                <span className="text-xs text-gray-500">vs last month</span>
+              </div>
+            )}
+          </div>
+          <div className={`p-${compact ? '2' : '3'} rounded-xl ${bgClass.split(' ')[2]} ${bgClass.split(' ')[3]} group-hover:scale-110 transition-transform duration-300`}>
+            {icon}
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
-export default Overview;
+
+function Section({ title, children, icon }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center space-x-2 mb-6">
+        {icon && (
+          <div className="p-2 rounded-lg bg-gray-100 text-gray-600">
+            {icon}
+          </div>
+        )}
+        <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+
+function ChartSection({ title, data, dataKey, color = "#3B82F6", icon, prefix, chartType = 'line' }) {
+  const formatValue = (value) => {
+    if (prefix) {
+      return `${prefix}${value?.toLocaleString()}`;
+    }
+    return value?.toLocaleString();
+  };
+
+  return (
+    <Section title={title} icon={icon}>
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          {chartType === 'area' ? (
+            <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <defs>
+                <linearGradient id={`color-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={color} stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+              <XAxis 
+                dataKey="_id" 
+                stroke="#6b7280"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis 
+                stroke="#6b7280"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={formatValue}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                }}
+                formatter={(value) => [formatValue(value), title]}
+              />
+              <Area 
+                type="monotone" 
+                dataKey={dataKey} 
+                stroke={color} 
+                strokeWidth={3}
+                fill={`url(#color-${dataKey})`}
+                dot={{ fill: color, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: color }}
+              />
+            </AreaChart>
+          ) : (
+            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+              <XAxis 
+                dataKey="_id" 
+                stroke="#6b7280"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis 
+                stroke="#6b7280"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={formatValue}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                }}
+                formatter={(value) => [formatValue(value), title]}
+              />
+              <Line 
+                type="monotone" 
+                dataKey={dataKey} 
+                stroke={color} 
+                strokeWidth={3}
+                dot={{ fill: color, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: color }}
+              />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    </Section>
+  );
+}
+
+
+function InsightCard({ title, name, value, type, isTop }) {
+  const Icon = type === 'product' ? Package : FileText;
+  const colorClass = isTop ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50';
+  const trendIcon = isTop ? TrendingUp : TrendingDown;
+  const TrendIcon = trendIcon;
+
+  return (
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-2 rounded-lg ${colorClass}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <div className={`p-1 rounded-full ${colorClass}`}>
+          <TrendIcon className="w-4 h-4" />
+        </div>
+      </div>
+      <h4 className="font-semibold text-gray-900 mb-2 text-sm">{title}</h4>
+      <p className="text-gray-800 font-medium mb-1 line-clamp-1" title={name}>{name}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+// Helper functions
+function getSourceColor(index) {
+  const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500'];
+  return colors[index % colors.length];
+}
+
+function getPageColor(index) {
+  const colors = ['bg-gradient-to-r from-blue-500 to-blue-600', 'bg-gradient-to-r from-green-500 to-green-600', 'bg-gradient-to-r from-purple-500 to-purple-600', 'bg-gradient-to-r from-orange-500 to-orange-600'];
+  return colors[index % colors.length];
+}

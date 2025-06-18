@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Category from '../components/Category';
 import { motion } from 'framer-motion';
+import { trackEvent } from '../utils/trackEvent';
 
 function Design() {
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   const designServices = [
     {
@@ -47,6 +49,17 @@ function Design() {
       category: 'MARKETING'
     }
   ];
+
+  const handleClick = ()=>{
+    const phone = "+23409025249323"; 
+  const message = encodeURIComponent("Hello I have a question");
+    trackEvent('conversion', {method:'whatsApplink'});
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  }
+
+   useEffect(()=>{
+      trackEvent('page_visit', {page: 'Branding'});
+    }, [])
 
   return (
     <div className="min-h-screen bg-white">
@@ -102,7 +115,9 @@ function Design() {
             <div className="text-4xl mb-4">{service.icon}</div>
             <h3 className="text-xl font-bold text-[#1D1849] mb-3">{service.title}</h3>
             <p className="text-gray-600 mb-6">{service.description}</p>
-            <button className="w-full bg-[#1D1849] text-white py-2 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
+            <button 
+            onClick={handleClick}
+            className="w-full bg-[#1D1849] text-white py-2 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
               Get Started
             </button>
           </div>

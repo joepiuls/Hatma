@@ -25,19 +25,19 @@ import Design from "./pages/Design";
 import BrandDevelopment from "./pages/BrandDevelopment";
 import AdminDashboardLayout from "./pages/admin/AdminDashboardLayout";
 import Overview from "./pages/admin/Overview";
-import AddProduct from "./pages/admin/AddProduct";
 import PostsDashboard from "./pages/admin/Posts";
 import AddPostForm from "./pages/admin/AddPost";
-import EditPostForm from "./pages/admin/EditPost";
 import ProductDashboard from "./pages/admin/Product";
-import HR from "./pages/admin/HR";
 import Sales from "./pages/admin/Sales";
 import Forms from "./pages/admin/Forms&Orders";
 import PortfolioDashboard from "./pages/admin/Portfolio";
 import Analytics from "./pages/admin/Analytics";
+import OurWork from "./components/ourWork";
+import { initTracking } from "./utils/trackEvent";
 
 
 const App = () => {
+  initTracking();
   return (
     <>
       <Toaster richColors position="top-right" />
@@ -56,7 +56,6 @@ const App = () => {
               <Route path="products" element={<ProductDashboard />}/>
               <Route path="blog" element={<PostsDashboard />}/>
               <Route path="add-blog" element={<AddPostForm />}/>
-              <Route path="hr" element={<HR />} />
               <Route path="sales" element={<Sales />} />
               <Route path="orders" element={<Forms />} />
               <Route path="info" element={<PortfolioDashboard />} />
@@ -74,12 +73,13 @@ const App = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/faq" element={<Faq />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/work" element={<OurWork />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services/hatma-prime" element={<HatmaPrime />} />
             <Route path="/services/digital-marketing" element={<DigitalMarketing />} />
             <Route path="/services/cac-registration" element={<CACRegisteration />} />
             <Route path="/services/branding" element={<Design/>} />
-            <Route path="/products" element={<ProductPage />} />
+            <Route path="/products/:id" element={<ProductPage />} />
             <Route path="/services/brand-development" element={<BrandDevelopment />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order/:id" element={<OrderPage />} />

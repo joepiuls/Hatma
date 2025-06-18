@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { api } from "../axios";
 import useAuthStore from "./useAuthStore";
 import { useOrderStore } from "./useOrderStore";
+import { trackError, trackPurchase } from "../utils/trackEvent";
 
 const localStorageKey = "cart_items";
 let syncTimeout = null;
@@ -137,17 +138,21 @@ export const useCartStore = create((set, get) => ({
         }));
 
       if (validItems.length === 0) {
-        toast.warning("Cart is empty or contains invalid items");
         return;
       }
 
       await api.post("/user/cart", { cart: validItems });
-
       set({ syncStatus: "synced" });
-      toast.success("Cart synced with server");
     } catch (err) {
       set({ syncStatus: "failed" });
       toast.error("Failed to sync cart with server");
+      trackError("Cart sync error", {
+        action: "syncCartToServer",
+        userId: user._id,
+        additionalInfo: {
+          error: err.message || "Unknown error"
+        }
+      });
       console.error("Cart sync error:", err);
     }
   },
@@ -171,6 +176,13 @@ export const useCartStore = create((set, get) => ({
     }
   } catch (err) {
     toast.error("Failed to load cart from server");
+    trackError("Cart load error", {
+      action: "loadCartFromServer",
+      userId: user._id,
+      additionalInfo: {
+        error: err.message || "Unknown error"
+      }
+    });
     console.error(err);
   }
 },
@@ -203,6 +215,17 @@ checkout: async ({ items, totalAmount, paymentMethod, transactionId, additionalI
     return res.data;
   } catch (err) {
     console.error("Checkout failed:", err);
+    trackError("Checkout error", {
+      action: "checkout",
+      userId: user._id,
+      additionalInfo: {
+        error: err.message || "Unknown error",
+        items,
+        totalAmount,
+        paymentMethod,
+        transactionId
+      }
+    });
     toast.error("Checkout failed");
   }
 }

@@ -1,55 +1,95 @@
 import React, { useState } from 'react';
 import { ChevronDown, Linkedin, Facebook, Instagram } from 'lucide-react';
-import Newsletter from './blog/Newletter';
+import EmailSubscription from '../../components/EmailSubscription';
+import { useForm } from 'react-hook-form';
+import useSubmitStore from '../../store/useSubmitStore';
+import { trackEvent } from '../../utils/trackEvent';
 
 function Faq() {
   const [activeQuestion, setActiveQuestion] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
 
-  const faqQuestions = [
-    {
-      id: 1,
-      question: 'What are the services that we offer?',
-      answer: 'We offer comprehensive digital marketing, branding, and business development services.'
-    },
-    {
-      id: 2,
-      question: 'Can I employ your services as a pay per project',
-      answer: 'Yes, we offer flexible payment options including pay-per-project arrangements.'
-    },
-    {
-      id: 3,
-      question: 'What is Hatma Prime all about?',
-      answer: 'Hatma Prime is our premium service package that offers exclusive benefits and priority support.'
-    }
-  ];
+ const faqQuestions = [
+  {
+    id: 1,
+    question: 'What are the services that we offer?',
+    answer: 'We offer comprehensive digital marketing, branding, and business development services.'
+  },
+  {
+    id: 2,
+    question: 'Can I employ your services as a pay per project?',
+    answer: 'Yes, we offer flexible payment options including pay-per-project arrangements.'
+  },
+  {
+    id: 3,
+    question: 'What is Hatma Prime all about?',
+    answer: 'Hatma Prime is our premium service package that offers exclusive benefits and priority support.'
+  },
+  {
+    id: 4,
+    question: 'How do I get started with your services?',
+    answer: 'Simply contact us through our website or social media platforms, and we’ll schedule a free consultation to understand your goals and recommend the best plan.'
+  },
+  {
+    id: 5,
+    question: 'What industries do you work with?',
+    answer: 'We work with a wide range of industries including tech, fashion, health, finance, education, and more. Our strategies are tailored to fit your niche.'
+  },
+  {
+    id: 6,
+    question: 'Do you offer ongoing support after project completion?',
+    answer: 'Yes, we provide ongoing support, performance monitoring, and optional maintenance packages after the initial project delivery.'
+  },
+  {
+    id: 7,
+    question: 'How long does it take to complete a typical project?',
+    answer: 'Timelines vary based on the project scope, but most projects are completed within 2 to 6 weeks. We provide a detailed timeline after the initial consultation.'
+  },
+  {
+    id: 8,
+    question: 'Can I request custom packages tailored to my business needs?',
+    answer: 'Absolutely. We specialize in creating custom packages that align with your specific goals, budget, and industry requirements.'
+  },
+  {
+    id: 9,
+    question: 'Is Hatma Prime suitable for startups or only large businesses?',
+    answer: 'Hatma Prime is suitable for both startups and established businesses looking for dedicated support, strategic scaling, and faster results.'
+  },
+  {
+    id: 10,
+    question: 'Where is your team based?',
+    answer: 'Our team is globally distributed, with core operations managed from our headquarters. This allows us to offer diverse insights and 24/7 availability.'
+  }
+];
+
 
   const handleQuestionClick = (id) => {
     setActiveQuestion(activeQuestion === id ? null : id);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm();
+
+  const [message, setMessage] = useState('');
+  
+  const {loading, submitCustomRequest} = useSubmitStore();
+
+  const onSubmit = async(data) => {
+    await submitCustomRequest(data);
+    await trackEvent('service_request');
+    reset();
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      message: ''
-    });
-  };
+  const handleClick = ()=>{
+        const phone = "+23409025249323"; 
+        const text = encodeURIComponent(message);
+        trackEvent('conversion', {method:'whatsApplink'});
+        trackEvent('service_request')
+        window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+      }
 
   return (
     <div className="min-h-screen bg-white">
@@ -58,7 +98,12 @@ function Faq() {
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-[#1C0C4F] mb-2">How may we help you today?</h2>
           <p className="text-[#1C0C4F] mb-6">Speak to our customer representative today and let's resolve your issue.</p>
-          <button className="bg-[#1C0C4F] text-white px-8 py-2 rounded-md">Start</button>
+          <button 
+          onClick={()=>{
+            setMessage('Hello I want you to');
+            handleClick();
+          }}
+          className="bg-[#1C0C4F] text-white px-8 py-2 rounded-md">Start</button>
         </div>
       </div>
 
@@ -107,54 +152,46 @@ function Faq() {
             />
           </div>
           <div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
+             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <input
                   type="text"
-                  name="name"
-                  placeholder="e.g John doe"
-                  value={formData.name}
-                  onChange={handleInputChange}
+                  {...register("name", { required: 'Name is required' })}
+                  placeholder="Name"
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
-              <div>
+                {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+
                 <input
                   type="email"
-                  name="email"
-                  placeholder="e.g example@example.com"
-                  value={formData.email}
-                  onChange={handleInputChange}
+                  {...register("email", { required: 'Email is required' })}
+                  placeholder="Email"
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
-              <div>
+                {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+
                 <input
                   type="tel"
-                  name="phone"
-                  placeholder="(091) 1234-5678"
-                  value={formData.phone}
-                  onChange={handleInputChange}
+                  {...register("phone", { required: 'Phone number is required' })}
+                  placeholder="Phone number"
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 />
-              </div>
-              <div>
+                {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
+
                 <textarea
-                  name="message"
-                  rows="6"
+                  {...register("message", { required: 'Message is required' })}
+                  rows="4"
                   placeholder="Your message"
-                  value={formData.message}
-                  onChange={handleInputChange}
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#1C0C4F] focus:border-[#1C0C4F]"
                 ></textarea>
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-[#1C0C4F] text-white py-3 rounded-lg hover:bg-[#2d1674] transition-colors"
-              >
-                Share your thoughts
-              </button>
-            </form>
+                {errors.message && <p className="text-red-500 text-sm">{errors.message.message}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-primary flex items-center justify-center text-white py-3 rounded-lg hover:bg-slate-950 transition-colors"
+                >
+                 {loading ? <Loader className='animate-spin text-center' /> : ' Get Started'}
+                </button>
+              </form>
           </div>
         </div>
       </div>
@@ -195,7 +232,7 @@ function Faq() {
       </div>
 
       {/* Newsletter Section */}
-      <Newsletter />
+      <EmailSubscription />
     </div>
   );
 }

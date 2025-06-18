@@ -88,7 +88,7 @@ const BlogSection = () => {
                   <div key={post._id} className="bg-white p-4 rounded-lg shadow-md">
                     <img src={post.image || image} className="rounded mb-4 h-48 w-full object-cover" alt={post.title} />
                     <h3 className="text-xl font-semibold text-gray-800">{post.title}</h3>
-                    <p className="text-gray-500 text-sm mt-2">{post.excerpt || post.content.slice(0, 100)}</p>
+                    <p className="text-gray-500 text-sm mt-2">{post?.body?.slice(0, 100)}</p>
                     <Link to={`/blog/${post._id}`} className="text-yellow-600 mt-4 inline-block">Read More</Link>
                   </div>
                 ))}
