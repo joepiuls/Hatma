@@ -7,7 +7,7 @@ import {
   FaChevronUp
 } from "react-icons/fa";
 import { MdLogout, MdClose } from "react-icons/md";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 import useAuthStore from "../store/useAuthStore";
 
 const MobileSidebar = ({ isOpen, onClose }) => {

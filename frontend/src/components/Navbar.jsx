@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 import useAuthStore from "../store/useAuthStore";
 import { FaBars } from "react-icons/fa";
 import {BsCart3} from 'react-icons/bs'
