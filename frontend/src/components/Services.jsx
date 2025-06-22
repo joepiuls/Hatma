@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Frame from "../assets/frame.png";
+import Frame from "../assets/Frame.png";
 
 const services = [
   {
