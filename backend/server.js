@@ -28,6 +28,7 @@ const app = express();
 app.use(express.json());
 
 const allowedOrigins = [
+  'http://localhost:5000', // for local dev
   'https://hatma.onrender.com', // your production frontend URL
 ];
 
