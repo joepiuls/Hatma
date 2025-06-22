@@ -2,15 +2,14 @@ import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Users, Target, Lightbulb, X, Mail, Phone, Linkedin, Globe } from "lucide-react";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 const UserPage = ({ user, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
   
   useEffect(() => {
-    // Prevent background scrolling when modal is open
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "auto";

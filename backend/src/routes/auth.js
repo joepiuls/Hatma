@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     // ✅ Convert to plain object and remove password
     const userWithoutPassword = user.toObject();
@@ -62,7 +62,7 @@ router.post('/google-login', async (req, res) => {
       await user.save();
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     return res.json({
       token,
       user: {
@@ -159,7 +159,7 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     const userWithoutPassword = user.toObject();
     delete userWithoutPassword.password;
 

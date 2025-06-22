@@ -5,9 +5,11 @@ import { api } from "../axios";
 import useAuthStore from "./useAuthStore";
 import { useOrderStore } from "./useOrderStore";
 import { trackError, trackPurchase } from "../utils/trackEvent";
+import { useProductStore } from "./useProductStore";
 
 const localStorageKey = "cart_items";
 let syncTimeout = null;
+let relatedProductsTimeout = null;
 
 const loadCartFromStorage = () => {
   try {
@@ -34,9 +36,18 @@ const debounceSync = () => {
   }, 1000);
 };
 
+const debounceRelatedProducts = () => {
+  clearTimeout(relatedProductsTimeout);
+  relatedProductsTimeout = setTimeout(() => {
+    useCartStore.getState().fetchRelatedProducts();
+  }, 500);
+};
+
 export const useCartStore = create((set, get) => ({
   cartItems: loadCartFromStorage(),
   syncStatus: "idle", // idle | syncing | synced | failed
+  relatedProducts: [], // Array of related products
+  relatedProductsStatus: "idle", // idle | loading | loaded | error
 
   addToCart: (product) => {
     if (!product || !product._id || !product.name || typeof product.price !== "number") {
@@ -60,6 +71,7 @@ export const useCartStore = create((set, get) => ({
     saveCartToStorage(updated);
     set({ cartItems: updated });
     debounceSync();
+    debounceRelatedProducts(); // Fetch related products when cart changes
   },
 
   removeFromCart: (id) => {
@@ -68,6 +80,7 @@ export const useCartStore = create((set, get) => ({
     set({ cartItems: updated });
     toast.success("Removed item from cart");
     debounceSync();
+    debounceRelatedProducts(); // Fetch related products when cart changes
   },
 
   incrementQuantity: (id) => {
@@ -96,11 +109,12 @@ export const useCartStore = create((set, get) => ({
     saveCartToStorage(updated);
     set({ cartItems: updated });
     debounceSync();
+    debounceRelatedProducts(); // Fetch related products when cart changes
   },
 
   clearCart: () => {
     saveCartToStorage([]);
-    set({ cartItems: [] });
+    set({ cartItems: [], relatedProducts: [] });
     toast.success("Cart cleared");
     debounceSync();
   },
@@ -158,81 +172,141 @@ export const useCartStore = create((set, get) => ({
   },
 
   loadCartFromServer: async () => {
-  const user = useAuthStore.getState().user;
-  if (!user || !user._id) return;
+    const user = useAuthStore.getState().user;
+    if (!user || !user._id) return;
 
-  try {
-    const res = await api.get("/user/cart");
-    const items = res.data.cart || [];
+    try {
+      const res = await api.get("/user/cart");
+      const items = res.data.cart || [];
 
-    const prevItems = get().cartItems;
-    const isDifferent = JSON.stringify(prevItems) !== JSON.stringify(items);
+      const prevItems = get().cartItems;
+      const isDifferent = JSON.stringify(prevItems) !== JSON.stringify(items);
 
-    saveCartToStorage(items);
-    set({ cartItems: items });
+      saveCartToStorage(items);
+      set({ cartItems: items });
 
-    if (isDifferent && items.length > 0) {
-      toast.success("Cart loaded from server");
-    }
-  } catch (err) {
-    toast.error("Failed to load cart from server");
-    trackError("Cart load error", {
-      action: "loadCartFromServer",
-      userId: user._id,
-      additionalInfo: {
-        error: err.message || "Unknown error"
+      if (isDifferent && items.length > 0) {
+        toast.success("Cart loaded from server");
       }
-    });
-    console.error(err);
-  }
-},
+    } catch (err) {
+      toast.error("Failed to load cart from server");
+      trackError("Cart load error", {
+        action: "loadCartFromServer",
+        userId: user._id,
+        additionalInfo: {
+          error: err.message || "Unknown error"
+        }
+      });
+      console.error(err);
+    }
+  },
 
-checkout: async ({ items, totalAmount, paymentMethod, transactionId, additionalInfo = "", address, phoneNumber }) => {
-  const user = useAuthStore.getState().user;
-  if (!user || !user._id) {
-    toast.error("User not authenticated");
-    return;
-  }
+  fetchRelatedProducts: async () => {
+    const cartItems = get().cartItems;
+    if (cartItems.length === 0) {
+      set({ relatedProducts: [], relatedProductsStatus: "idle" });
+      return;
+    }
 
-  if (!items?.length || !totalAmount || !paymentMethod || !transactionId) {
-    toast.error("Missing checkout data");
-    return;
-  }
+    try {
+      set({ relatedProductsStatus: "loading" });
+      
+      // Get all categories from cart items
+      const allCategories = cartItems.flatMap(item => 
+        item.categories || item.category ? [item.category] : []
+      );
+      
+      // Get all tags from cart items
+      const allTags = cartItems.flatMap(item => item.tags || []);
+      
+      // Get product IDs already in cart to exclude
+      const cartProductIds = cartItems.map(item => item._id);
+      
+      // Get products from product store
+      const { products } = useProductStore.getState();
+      
+      // Find related products based on categories and tags
+      const related = products.filter(product => {
+        // Skip products already in cart
+        if (cartProductIds.includes(product._id)) return false;
+        
+        // Check category match
+        const categoryMatch = allCategories.includes(product.category);
+        
+        // Check tag match (at least one common tag)
+        const tagMatch = product.tags && product.tags.some(tag => allTags.includes(tag));
+        
+        return categoryMatch || tagMatch;
+      });
+      
+      // Limit to 6 related products
+      set({ 
+        relatedProducts: related.slice(0, 6),
+        relatedProductsStatus: "loaded"
+      });
+    } catch (err) {
+      console.error("Failed to fetch related products", err);
+      set({ relatedProductsStatus: "error" });
+    }
+  },
 
-  try {
-    const res = await api.post("/user/checkout", {
-      items,
-      totalAmount,
-      paymentMethod,
-      transactionId,
-      additionalInfo,
-      address: address || user.address.find(a => a.isDefault) || {},
-      phoneNumber: phoneNumber || user.phoneNumber,
-    });
+  checkout: async ({ items, totalAmount, paymentMethod, transactionId, additionalInfo = "", address, phoneNumber }) => {
+    const user = useAuthStore.getState().user;
+    if (!user || !user._id) {
+      toast.error("User not authenticated");
+      return;
+    }
 
-    toast.success('Payment successful');
-    useCartStore.getState().clearCart();
-    return res.data;
-  } catch (err) {
-    console.error("Checkout failed:", err);
-    trackError("Checkout error", {
-      action: "checkout",
-      userId: user._id,
-      additionalInfo: {
-        error: err.message || "Unknown error",
+    if (!items?.length || !totalAmount || !paymentMethod || !transactionId) {
+      toast.error("Missing checkout data");
+      return;
+    }
+
+    try {
+      const res = await api.post("/user/checkout", {
         items,
         totalAmount,
         paymentMethod,
-        transactionId
-      }
-    });
-    toast.error("Checkout failed");
+        transactionId,
+        additionalInfo,
+        address: address || user.address.find(a => a.isDefault) || {},
+        phoneNumber: phoneNumber || user.phoneNumber,
+      });
+
+      toast.success('Payment successful');
+      useCartStore.getState().clearCart();
+      return res.data;
+    } catch (err) {
+      console.error("Checkout failed:", err);
+      trackError("Checkout error", {
+        action: "checkout",
+        userId: user._id,
+        additionalInfo: {
+          error: err.message || "Unknown error",
+          items,
+          totalAmount,
+          paymentMethod,
+          transactionId
+        }
+      });
+      toast.error("Checkout failed");
+    }
   }
-}
-
-
 
 }));
+
+// Initialize related products on store creation
+const initializeRelatedProducts = () => {
+  const cartItems = useCartStore.getState().cartItems;
+  if (cartItems.length > 0) {
+    setTimeout(() => {
+      useCartStore.getState().fetchRelatedProducts();
+    }, 1000);
+  }
+};
+
+// Run initialization
+initializeRelatedProducts();
 
 // Sync cart before unload if user is authenticated
 if (typeof window !== "undefined") {

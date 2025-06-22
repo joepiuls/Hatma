@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +22,7 @@
     "express": "^5.1.0",
     "get-stream": "^9.0.1",
     "google-auth-library": "^9.15.1",
+    "hatma_app": "file:..",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.2",
     "multer": "^2.0.1",

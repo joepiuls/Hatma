@@ -7,14 +7,13 @@ import PaystackCheckoutButton from '../components/PaystackCheckoutButton';
 
 const CartPage = () => {
   const {user} = useAuthStore();
-  const navigate = useNavigate();;
-
+  const navigate = useNavigate();
  
   const {
     cartItems, 
     incrementQuantity, loadCartFromServer,
-    decrementQuantity, getCartTotal, 
-    removeFromCart} = useCartStore();
+    decrementQuantity, getCartTotal, addToCart,
+    removeFromCart, fetchRelatedProducts, relatedProducts} = useCartStore();
 
 
   const [additionalInfo, setAdditionalInfo] = useState('');
@@ -27,6 +26,7 @@ useEffect(() => {
   if (user && user._id && !cartLoaded) {
     loadCartFromServer();
     setCartLoaded(true);
+    fetchRelatedProducts();
   }
 }, [user, cartLoaded]);
 
@@ -149,25 +149,29 @@ useEffect(() => {
       <div className="mt-16">
         <h2 className="text-2xl font-bold mb-8">Related Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((id) => (
+          {relatedProducts.length > 0 ? relatedProducts.map((item, id) => (
             <div
               key={id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
             >
               <img 
-                src={`https://images.pexels.com/photos/${356056 + id}/pexels-photo-${356056 + id}.jpeg?auto=compress&cs=tinysrgb&w=400`} 
+                src={item.image || `https://images.pexels.com/photos/${356056 + id}/pexels-photo-${356056 + id}.jpeg?auto=compress&cs=tinysrgb&w=400`} 
                 alt="Related product" 
                 className="w-full h-48 object-cover" 
               />
               <div className="p-4 text-center">
-                <h3 className="font-semibold text-lg mb-2">Wireless Speaker</h3>
-                <p className="text-yellow-600 font-semibold mb-4">NGN 5000.00</p>
-                <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg">
+                <h3 className="font-semibold text-lg mb-2">{item.name || "Wireless Speaker"}</h3>
+                <p className="text-yellow-600 font-semibold mb-4">NGN {item.price || 5000}.00</p>
+                <button 
+                onClick={() => addToCart(item)}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg">
                   Add to Cart
                 </button>
               </div>
             </div>
-          ))}
+          )) : (
+            <p>No related products found.</p>
+          )}
         </div>
       </div>
     </div>
