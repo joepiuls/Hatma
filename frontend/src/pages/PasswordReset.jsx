@@ -5,7 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { auth } from "../../firebaseConfig";
 import { confirmPasswordReset } from "firebase/auth";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 import "react-toastify/dist/ReactToastify.css";
 
 function PasswordResetForm() {

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 import { LoaderCircle } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
 import Googlelogin from "./GoogleLogin";
