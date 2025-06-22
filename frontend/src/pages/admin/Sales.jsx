@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { StatCard, ChartCard, StatusBadge } from '../../components/SalesComponents';
+import { StatCard, ChartCard, StatusBadge } from '../../components/SalesComponents.jsx';
 import {
   DollarSign,
   ShoppingCart,
@@ -13,7 +13,7 @@ import {
   Package,
   MoreHorizontal,
 } from 'lucide-react';
-import { useOverviewStore } from '../../store/useOverviewStore';
+import { useOverviewStore } from '../../store/useOverviewStore.jsx';
 import {
   AreaChart,
   Area,
@@ -26,7 +26,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import {OrderDeliveryDropdown, OrderPaymentDropdown} from '../../components/ordersStatusDropdown';
+import {OrderDeliveryDropdown, OrderPaymentDropdown} from '../../components/OrdersStatusDropdown.jsx';
 
 const COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#6B7280'];
 
