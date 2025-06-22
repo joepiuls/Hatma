@@ -2,7 +2,7 @@ import axios from 'axios';
 import useAuthStore from './store/useAuthStore';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://hatma.onrender.com',
+  baseURL: 'https://hatma.onrender.com/api',
   withCredentials: true, // only needed if using cookies
 });
 
