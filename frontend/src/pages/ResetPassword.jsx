@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 import { LoaderCircle } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
 
