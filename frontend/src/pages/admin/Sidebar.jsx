@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Settings
 } from 'lucide-react';
-import Logo from '../../assets/Logo.png';
+import logo from '../../assets/Logo.png';
 import useAuthStore from '../../store/useAuthStore';
 const Sidebar = ({isCollapsed, setIsCollapsed}) => {
   const { user } = useAuthStore();
@@ -37,7 +37,7 @@ const Sidebar = ({isCollapsed, setIsCollapsed}) => {
         <div className="flex items-center">
           {!isCollapsed ? (
             <Link to="/" className="flex items-center">
-              <img src={Logo} alt='Logo'/>
+              <img src={logo} alt='Logo'/>
             </Link>
           ) : (
             <div className="bg-gradient-to-r from-indigo-600 to-secondary w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl text-white">
