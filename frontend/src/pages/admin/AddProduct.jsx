@@ -14,6 +14,8 @@ import {
   FileText, 
   ArrowLeft,
   Save,
+  Check,
+  Star,
   Eye,
   EyeOff
 } from 'lucide-react';
@@ -321,7 +323,7 @@ const AddProductForm = ({ setView }) => {
                       : 'border-gray-300 bg-gray-50'
                   }`}>
                     {currentStep > step.id ? (
-                      <Check className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                     ) : (
                       <div className="w-4 h-4 md:w-5 md:h-5">{step.icon}</div>
                     )}
@@ -483,7 +485,7 @@ const AddProductForm = ({ setView }) => {
                       <button
                         type="button"
                         onClick={handleAddVariant}
-                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 font-medium text-sm"
+                        className="flex items-center space-x-1 text-primary hover:text-dark font-medium text-sm"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Add Variant</span>
@@ -575,7 +577,7 @@ const AddProductForm = ({ setView }) => {
                     onDragLeave={handleDragLeave}
                     className={`relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 ${
                       dragActive 
-                        ? 'border-blue-500 bg-blue-50' 
+                        ? 'border-primary bg-blue-50' 
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
                   >
@@ -588,7 +590,7 @@ const AddProductForm = ({ setView }) => {
                       <p className="text-xs text-gray-500 mb-3">
                         Max {MAX_IMAGES} images • Max {MAX_FILE_SIZE_MB}MB per image • JPG, PNG, GIF
                       </p>
-                      <label className="inline-flex items-center space-x-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors text-sm">
+                      <label className="inline-flex items-center space-x-1 px-4 py-2 bg-primary hover:bg-dark text-white rounded-lg cursor-pointer transition-colors text-sm">
                         <Upload className="w-4 h-4" />
                         <span>Choose Files</span>
                         <input
@@ -636,7 +638,7 @@ const AddProductForm = ({ setView }) => {
                               <X className="w-3 h-3" />
                             </button>
                             {index === 0 && (
-                              <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-blue-600 text-white text-xs rounded">
+                              <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-primary text-white text-xs rounded">
                                 Primary
                               </div>
                             )}
@@ -822,7 +824,7 @@ const AddProductForm = ({ setView }) => {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="flex items-center space-x-1 px-4 py-2 bg-primary hover:bg-blue-950 text-white rounded-lg font-medium transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-primary hover:bg-dark text-white rounded-lg font-medium transition-colors"
                 >
                   <span>Next</span>
                   <ArrowLeft className="w-4 h-4 rotate-180" />

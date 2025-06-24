@@ -120,6 +120,27 @@ const AddPostForm = ({ setView }) => {
   }, [images]);
 
   const onSubmit = async (data) => {
+    // Validate all steps before submitting
+    const step1Valid = await trigger(['title', 'category', 'duration', 'industry']);
+    const step2Valid = await trigger(['body']);
+    
+    if (!step1Valid) {
+      setCurrentStep(1);
+      return;
+    }
+    
+    if (!step2Valid) {
+      setCurrentStep(2);
+      return;
+    }
+    
+    // Validate images
+    if (images.length === 0) {
+      setCurrentStep(3);
+      setUploadError('Please upload at least one image');
+      return;
+    }
+
     try {
       const formData = new FormData();
       
@@ -157,14 +178,7 @@ const AddPostForm = ({ setView }) => {
     const fieldsToValidate = {
       1: ['title', 'category', 'duration', 'industry'],
       2: ['body'],
-      3: [] // Step 3 has no form fields
     };
-
-    // Validate images for step 3
-    if (currentStep === 3 && images.length === 0) {
-      setUploadError('Please upload at least one image');
-      return;
-    }
 
     const isValid = await trigger(fieldsToValidate[currentStep]);
     if (isValid) {
@@ -234,7 +248,7 @@ const AddPostForm = ({ setView }) => {
                       : 'border-gray-300 bg-gray-50'
                   }`}>
                     {currentStep > step.id ? (
-                      <Check className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                     ) : (
                       <div className="w-4 h-4 md:w-5 md:h-5">{step.icon}</div>
                     )}
@@ -243,7 +257,7 @@ const AddPostForm = ({ setView }) => {
                 </div>
                 {index < steps.length - 1 && (
                   <div className={`hidden sm:block w-8 md:w-16 h-0.5 mx-2 ${
-                    currentStep > step.id ? 'bg-blue-600' : 'bg-gray-300'
+                    currentStep > step.id ? 'bg-primary' : 'bg-gray-300'
                   }`} />
                 )}
               </div>
@@ -383,7 +397,7 @@ const AddPostForm = ({ setView }) => {
                     onDragLeave={handleDragLeave}
                     className={`relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 ${
                       dragActive 
-                        ? 'border-blue-500 bg-blue-50' 
+                        ? 'border-primary bg-blue-50' 
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
                   >
@@ -396,7 +410,7 @@ const AddPostForm = ({ setView }) => {
                       <p className="text-xs text-gray-500 mb-3">
                         Max {MAX_IMAGES} images • Max {MAX_FILE_SIZE_MB}MB per image • JPG, PNG, GIF
                       </p>
-                      <label className="inline-flex items-center space-x-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors text-sm">
+                      <label className="inline-flex items-center space-x-1 px-4 py-2 bg-primary hover:bg-dark text-white rounded-lg cursor-pointer transition-colors text-sm">
                         <Upload className="w-4 h-4" />
                         <span>Choose Files</span>
                         <input
@@ -444,7 +458,7 @@ const AddPostForm = ({ setView }) => {
                               <X className="w-3 h-3" />
                             </button>
                             {index === 0 && (
-                              <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-blue-600 text-white text-xs rounded">
+                              <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-primary text-white text-xs rounded">
                                 Featured
                               </div>
                             )}
@@ -478,7 +492,7 @@ const AddPostForm = ({ setView }) => {
                   <div
                     key={step.id}
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      currentStep >= step.id ? 'bg-blue-600' : 'bg-gray-300'
+                      currentStep >= step.id ? 'bg-primary' : 'bg-gray-300'
                     }`}
                   />
                 ))}
@@ -488,14 +502,14 @@ const AddPostForm = ({ setView }) => {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="flex items-center space-x-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-primary hover:bg-dark text-white rounded-lg font-medium transition-colors"
                 >
                   <span>Next</span>
                   <ArrowLeft className="w-4 h-4 rotate-180" />
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
                   disabled={loading}
                   onClick={handleSubmit(onSubmit)}
                   className="flex items-center space-x-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
@@ -522,7 +536,7 @@ function FormSection({ title, description, icon, children }) {
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex items-center space-x-3 pb-3 md:pb-4 border-b border-gray-200">
-        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+        <div className="p-2 bg-blue-50 rounded-lg text-primary">
           {icon}
         </div>
         <div>
