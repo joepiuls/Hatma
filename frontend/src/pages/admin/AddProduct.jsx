@@ -12,10 +12,6 @@ import {
   DollarSign, 
   Tag, 
   FileText, 
-  Truck, 
-  Star,
-  AlertCircle,
-  Check,
   ArrowLeft,
   Save,
   Eye,
@@ -40,20 +36,17 @@ const schema = yup.object().shape({
   price: yup.number()
     .required('Price is required')
     .min(0, 'Price must be positive')
-    .test('is-decimal', 'Price must have up to 2 decimal places', value => 
-      value === undefined || /^\d+(\.\d{1,2})?$/.test(value)
-    ),
+    .typeError('Price must be a valid number'),
   discountPrice: yup.number()
     .min(0, 'Discount price must be positive')
+    .typeError('Discount price must be a valid number')
     .test('less-than-price', 'Discount must be less than price', function(value) {
       return value === undefined || value < this.parent.price;
     }),
   costPrice: yup.number()
     .required('Cost price is required')
     .min(0, 'Cost price must be positive')
-    .test('is-decimal', 'Cost price must have up to 2 decimal places', value => 
-      value === undefined || /^\d+(\.\d{1,2})?$/.test(value)
-    ),
+    .typeError('Cost price must be a valid number'),
   featured: yup.boolean(),
 });
 
@@ -74,9 +67,9 @@ const AddProductForm = ({ setView }) => {
   const { register, handleSubmit, control, formState: { errors }, watch, trigger, reset } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      price: '',
-      discountPrice: '',
-      costPrice: '',
+      price: undefined,
+      discountPrice: undefined,
+      costPrice: undefined,
       featured: false,
     }
   });
@@ -157,7 +150,7 @@ const AddProductForm = ({ setView }) => {
       file
     }));
     
-    setImages([...images, ...newImages]);
+    setImages(prev => [...prev, ...newImages]);
   }, [images]);
 
   const handleFileChange = useCallback((e) => {
@@ -184,7 +177,7 @@ const AddProductForm = ({ setView }) => {
   const removeImage = useCallback((index) => {
     // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(images[index].url);
-    setImages(images.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
   }, [images]);
 
   // Clean up object URLs on unmount
@@ -196,11 +189,25 @@ const AddProductForm = ({ setView }) => {
 
   const onSubmit = async (data) => {
     try {
-      const formData = {
-        ...data,
-        variants: variants.filter(v => v.optionName && v.optionValues.some(val => val)),
-        images: images.map(img => img.file),
-      };
+      // Create FormData for file uploads
+      const formData = new FormData();
+      
+      // Append all form fields
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+      
+      // Append variants as JSON
+      formData.append('variants', JSON.stringify(
+        variants.filter(v => v.optionName && v.optionValues.some(val => val))
+      ));
+      
+      // Append image files
+      images.forEach(image => {
+        formData.append('images', image.file);
+      });
       
       await createProduct(formData);
       
@@ -236,6 +243,14 @@ const AddProductForm = ({ setView }) => {
       3: [],
       4: ['price', 'costPrice']
     };
+
+    // Validate images for step 3
+    if (currentStep === 3) {
+      if (images.length === 0) {
+        setUploadError('Please upload at least one image');
+        return;
+      }
+    }
 
     const isValid = await trigger(fieldsToValidate[currentStep]);
     if (isValid) {
@@ -393,7 +408,7 @@ const AddProductForm = ({ setView }) => {
                     >
                       <input
                         type="number"
-                        {...register('quantity')}
+                        {...register('quantity', { valueAsNumber: true })}
                         placeholder="0"
                         className={`form-input ${errors.quantity ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                       />
@@ -654,7 +669,7 @@ const AddProductForm = ({ setView }) => {
                         <input
                           type="number"
                           step="0.01"
-                          {...register('price')}
+                          {...register('price', { valueAsNumber: true })}
                           placeholder="0.00"
                           className={`form-input pl-8 ${errors.price ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                         />
@@ -671,7 +686,7 @@ const AddProductForm = ({ setView }) => {
                         <input
                           type="number"
                           step="0.01"
-                          {...register('discountPrice')}
+                          {...register('discountPrice', { valueAsNumber: true })}
                           placeholder="0.00"
                           className={`form-input pl-8 ${errors.discountPrice ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                         />
@@ -689,7 +704,7 @@ const AddProductForm = ({ setView }) => {
                         <input
                           type="number"
                           step="0.01"
-                          {...register('costPrice')}
+                          {...register('costPrice', { valueAsNumber: true })}
                           placeholder="0.00"
                           className={`form-input pl-8 ${errors.costPrice ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                         />

@@ -13,14 +13,11 @@ import {
   AlertCircle,
   ArrowLeft,
   Save,
-  FileText as BodyIcon,
-  Clock,
   Building,
   BookOpen,
   Check
 } from 'lucide-react';
 import { useAdminBlogStore } from '../../store/useAdminBlogStore';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const MAX_IMAGES = 8;
@@ -41,13 +38,12 @@ const AddPostForm = ({ setView }) => {
   const [uploadError, setUploadError] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   
-  const { register, handleSubmit, control, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors }, trigger } = useForm({
     resolver: yupResolver(schema),
     defaultValues: { featured: false },
   });
 
   const { loading, createBlog } = useAdminBlogStore();
-  const navigate = useNavigate();
 
   const steps = [
     { id: 1, title: 'Post Details', icon: <FileText className="w-5 h-5" /> },
@@ -60,13 +56,11 @@ const AddPostForm = ({ setView }) => {
     setUploadError('');
     
     const validFiles = Array.from(files).filter(file => {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setUploadError('Only image files are allowed');
         return false;
       }
       
-      // Validate file size
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
         setUploadError(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
         return false;
@@ -75,7 +69,6 @@ const AddPostForm = ({ setView }) => {
       return true;
     });
     
-    // Check total image count
     if (images.length + validFiles.length > MAX_IMAGES) {
       setUploadError(`Maximum ${MAX_IMAGES} images allowed`);
       return;
@@ -86,11 +79,11 @@ const AddPostForm = ({ setView }) => {
       file
     }));
     
-    setImages([...images, ...newImages]);
+    setImages(prev => [...prev, ...newImages]);
   }, [images]);
 
   const handleFileChange = useCallback((e) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files?.length > 0) {
       handleImageUpload(e.target.files);
     }
   }, [handleImageUpload]);
@@ -98,7 +91,7 @@ const AddPostForm = ({ setView }) => {
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files?.length > 0) {
       handleImageUpload(e.dataTransfer.files);
     }
   }, [handleImageUpload]);
@@ -111,30 +104,33 @@ const AddPostForm = ({ setView }) => {
   const handleDragLeave = useCallback(() => setDragActive(false), []);
 
   const removeImage = useCallback((index) => {
-    setImages(images.filter((_, i) => i !== index));
-  }, [images]);
+    setImages(prev => {
+      const newImages = [...prev];
+      const [removed] = newImages.splice(index, 1);
+      URL.revokeObjectURL(removed.url);
+      return newImages;
+    });
+  }, []);
 
-  // Clean up object URLs on unmount
+  // Clean up object URLs
   useEffect(() => {
     return () => {
-      images.forEach(image => {
-        if (image.file) {
-          URL.revokeObjectURL(image.url);
-        }
-      });
+      images.forEach(image => URL.revokeObjectURL(image.url));
     };
   }, [images]);
 
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
+      
+      // Append form fields
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, value);
       });
+      
+      // Append images
       images.forEach(img => {
-        if (img.file) {
-          formData.append('images', img.file);
-        }
+        formData.append('images', img.file);
       });
 
       await createBlog(formData);
@@ -147,6 +143,8 @@ const AddPostForm = ({ setView }) => {
         },
       });
       
+      // Reset form and navigate
+      setImages([]);
       setView('list');
     } catch (error) {
       toast.error('Failed to create post', {
@@ -159,8 +157,14 @@ const AddPostForm = ({ setView }) => {
     const fieldsToValidate = {
       1: ['title', 'category', 'duration', 'industry'],
       2: ['body'],
-      3: []
+      3: [] // Step 3 has no form fields
     };
+
+    // Validate images for step 3
+    if (currentStep === 3 && images.length === 0) {
+      setUploadError('Please upload at least one image');
+      return;
+    }
 
     const isValid = await trigger(fieldsToValidate[currentStep]);
     if (isValid) {
@@ -216,7 +220,7 @@ const AddPostForm = ({ setView }) => {
           </div>
         </div>
 
-        {/* Progress Steps - Responsive */}
+        {/* Progress Steps */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {steps.map((step, index) => (

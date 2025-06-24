@@ -17,7 +17,8 @@ import {
   Save,
   Eye,
   EyeOff,
-  Check
+  Check,
+  Tag
 } from 'lucide-react';
 import { useAdminProductStore } from '../../store/useAdminProductStore';
 import { toast } from 'sonner';
@@ -73,7 +74,8 @@ export default function EditProductForm({ product, setView }) {
     formState: { errors }, 
     watch, 
     trigger, 
-    reset 
+    reset,
+    setValue
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -123,10 +125,13 @@ export default function EditProductForm({ product, setView }) {
         costPrice: product.costPrice || '',
         featured: product.featured || false,
       });
-      setImages(product.images.map(img => ({
+      
+      // Set images with proper structure
+      const initialImages = product.images.map(img => ({
         url: img,
         file: null
-      })) || []);
+      }));
+      setImages(initialImages);
     }
   }, [product, reset]);
 
@@ -161,7 +166,7 @@ export default function EditProductForm({ product, setView }) {
       file
     }));
     
-    setImages([...images, ...newImages]);
+    setImages(prev => [...prev, ...newImages]);
   }, [images]);
 
   const handleFileChange = useCallback((e) => {
@@ -186,8 +191,16 @@ export default function EditProductForm({ product, setView }) {
   const handleDragLeave = useCallback(() => setDragActive(false), []);
 
   const removeImage = useCallback((index) => {
-    setImages(images.filter((_, i) => i !== index));
-  }, [images]);
+    setImages(prev => {
+      const newImages = [...prev];
+      const removedImage = newImages.splice(index, 1)[0];
+      // Revoke URL if it's a blob URL (newly uploaded image)
+      if (removedImage.url.startsWith('blob:')) {
+        URL.revokeObjectURL(removedImage.url);
+      }
+      return newImages;
+    });
+  }, []);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -202,20 +215,27 @@ export default function EditProductForm({ product, setView }) {
 
   const onSubmit = async (data) => {
     try {
-      // Prepare images for submission
-      const updatedImages = images.map(img => {
-        // If it's a new image (has file), we'll need to upload it
-        // If it's an existing image (no file), we keep the URL
-        return img.file ? img.file : img.url;
+      const formData = new FormData();
+      
+      // Append all form fields
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
+      });
+      
+      // Append images
+      images.forEach(img => {
+        if (img.file) {
+          // Newly uploaded file
+          formData.append('images', img.file);
+        } else {
+          // Existing image URL
+          formData.append('existingImages', img.url);
+        }
       });
 
-      const updatedProduct = {
-        ...product,
-        ...data,
-        images: updatedImages
-      };
-      
-      await updateProduct(product._id, updatedProduct);
+      await updateProduct(product._id, formData);
       
       toast.success('Product updated successfully!', {
         description: `${data.name} has been updated in your inventory.`,
@@ -240,6 +260,14 @@ export default function EditProductForm({ product, setView }) {
       3: [],
       4: ['price', 'costPrice']
     };
+
+    // Validate images for step 3
+    if (currentStep === 3) {
+      if (images.length === 0) {
+        setUploadError('Please upload at least one image');
+        return;
+      }
+    }
 
     const isValid = await trigger(fieldsToValidate[currentStep]);
     if (isValid) {
@@ -397,7 +425,7 @@ export default function EditProductForm({ product, setView }) {
                     >
                       <input
                         type="number"
-                        {...register('quantity')}
+                        {...register('quantity', { valueAsNumber: true })}
                         placeholder="0"
                         className={`form-input ${errors.quantity ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                       />
@@ -577,7 +605,7 @@ export default function EditProductForm({ product, setView }) {
                         <input
                           type="number"
                           step="0.01"
-                          {...register('price')}
+                          {...register('price', { valueAsNumber: true })}
                           placeholder="0.00"
                           className={`form-input pl-8 ${errors.price ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                         />
@@ -594,7 +622,7 @@ export default function EditProductForm({ product, setView }) {
                         <input
                           type="number"
                           step="0.01"
-                          {...register('discountPrice')}
+                          {...register('discountPrice', { valueAsNumber: true })}
                           placeholder="0.00"
                           className={`form-input pl-8 ${errors.discountPrice ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                         />
@@ -612,7 +640,7 @@ export default function EditProductForm({ product, setView }) {
                         <input
                           type="number"
                           step="0.01"
-                          {...register('costPrice')}
+                          {...register('costPrice', { valueAsNumber: true })}
                           placeholder="0.00"
                           className={`form-input pl-8 ${errors.costPrice ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                         />

@@ -5,7 +5,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { 
   Loader, 
   X, 
-  Plus, 
   Upload, 
   Image as ImageIcon, 
   FileText, 
@@ -13,12 +12,8 @@ import {
   AlertCircle,
   ArrowLeft,
   Save,
-  Eye,
-  EyeOff,
   Check,
-  BookOpen,
-  Clock,
-  Building
+  BookOpen
 } from 'lucide-react';
 import { useAdminBlogStore } from '../../store/useAdminBlogStore';
 import { toast } from 'sonner';
@@ -41,7 +36,7 @@ const EditPostForm = ({ post, setView }) => {
   const [uploadError, setUploadError] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   
-  const { register, handleSubmit, control, formState: { errors }, reset, setValue } = useForm({
+  const { register, handleSubmit, control, formState: { errors }, reset, trigger } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       title: '',
@@ -84,13 +79,11 @@ const EditPostForm = ({ post, setView }) => {
     setUploadError('');
     
     const validFiles = Array.from(files).filter(file => {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setUploadError('Only image files are allowed');
         return false;
       }
       
-      // Validate file size
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
         setUploadError(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
         return false;
@@ -99,7 +92,6 @@ const EditPostForm = ({ post, setView }) => {
       return true;
     });
     
-    // Check total image count
     if (images.length + validFiles.length > MAX_IMAGES) {
       setUploadError(`Maximum ${MAX_IMAGES} images allowed`);
       return;
@@ -110,11 +102,11 @@ const EditPostForm = ({ post, setView }) => {
       file
     }));
     
-    setImages([...images, ...newImages]);
+    setImages(prev => [...prev, ...newImages]);
   }, [images]);
 
   const handleFileChange = useCallback((e) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files?.length > 0) {
       handleImageUpload(e.target.files);
     }
   }, [handleImageUpload]);
@@ -122,7 +114,7 @@ const EditPostForm = ({ post, setView }) => {
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files?.length > 0) {
       handleImageUpload(e.dataTransfer.files);
     }
   }, [handleImageUpload]);
@@ -135,8 +127,16 @@ const EditPostForm = ({ post, setView }) => {
   const handleDragLeave = useCallback(() => setDragActive(false), []);
 
   const removeImage = useCallback((index) => {
-    setImages(images.filter((_, i) => i !== index));
-  }, [images]);
+    setImages(prev => {
+      const newImages = [...prev];
+      const [removed] = newImages.splice(index, 1);
+      // Revoke URL if it's a blob URL (newly uploaded image)
+      if (removed.url.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.url);
+      }
+      return newImages;
+    });
+  }, []);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -151,20 +151,25 @@ const EditPostForm = ({ post, setView }) => {
 
   const onSubmit = async (data) => {
     try {
-      // Prepare images for submission
-      const updatedImages = images.map(img => {
-        // If it's a new image (has file), we'll need to upload it
-        // If it's an existing image (no file), we keep the URL
-        return img.file ? img.file : img.url;
+      const formData = new FormData();
+      
+      // Append form fields
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      
+      // Append images
+      images.forEach(img => {
+        if (img.file) {
+          // Newly uploaded file
+          formData.append('images', img.file);
+        } else {
+          // Existing image URL
+          formData.append('existingImages', img.url);
+        }
       });
 
-      const updatedPost = {
-        ...post,
-        ...data,
-        images: updatedImages
-      };
-      
-      await updateBlog(post._id, updatedPost);
+      await updateBlog(post._id, formData);
       
       toast.success('Post updated successfully!', {
         description: `${data.title} has been updated.`,
@@ -186,8 +191,14 @@ const EditPostForm = ({ post, setView }) => {
     const fieldsToValidate = {
       1: ['title', 'category', 'duration', 'industry'],
       2: ['body'],
-      3: []
+      3: [] // Step 3 has no form fields
     };
+
+    // Validate images for step 3
+    if (currentStep === 3 && images.length === 0) {
+      setUploadError('Please upload at least one image');
+      return;
+    }
 
     const isValid = await trigger(fieldsToValidate[currentStep]);
     if (isValid) {
