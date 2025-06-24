@@ -1,6 +1,6 @@
 const RibbonText = () => {
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-40 overflow-x-hidden">
+    <div className="relative flex flex-col items-center justify-center w-full h-40">
       {/* First Ribbon - Rotated Left */}
       <div className="absolute w-screen max-w-[120%] bg-[#FEF9ED] text-[#170E3D] font-medium text-lg rotate-[8deg] px-5 py-6 flex justify-around shadow-lg">
         <span>Social Media Management</span>
