@@ -2,8 +2,18 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useProductStore } from '../store/useProductStore';
-import SkeletonCard from './SkeletonCard'; // Assuming you have this component
 import { useCartStore } from '../store/useCartStore';
+
+const SkeletonCard = () => (
+  <div className="animate-pulse rounded-2xl overflow-hidden border border-gray-200 bg-white">
+    <div className="bg-gray-200 h-60 w-full" />
+    <div className="p-5 space-y-3">
+      <div className="h-4 bg-gray-200 rounded w-3/4" />
+      <div className="h-4 bg-gray-200 rounded w-1/2" />
+      <div className="h-10 bg-gray-200 rounded w-full" />
+    </div>
+  </div>
+);
 
 
 export default function FeaturedProducts() {
