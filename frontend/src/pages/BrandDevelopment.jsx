@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Category from '../components/Category';
 import { useLocation } from 'react-router-dom';
 import { trackEvent } from '../utils/trackEvent';
+import { Link } from 'lucide-react';
 
 function BrandDevelopment() {
     const location  = useLocation();
@@ -151,46 +152,12 @@ function BrandDevelopment() {
         <h2 className="text-3xl font-bold text-white mb-8">
           Want to elevate your brand? Become our partner today.
         </h2>
+        <Link to="/pricing" className="inline-block">
         <button 
-          onClick={handleClick}
           className="bg-orange-500 text-white px-8 py-3 rounded-md hover:bg-orange-600 transition-colors font-medium">
           GET STARTED
         </button>
-      </div>
-
-      {/* Portfolio Section */}
-      <div className="py-16 px-4 md:px-8 lg:px-16 bg-gray-50">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-[#1D1849]">Our work</h2>
-          <div className="w-16 h-1 bg-orange-500 mx-auto mt-4"></div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="group relative overflow-hidden rounded-lg bg-white shadow-md hover:shadow-xl transition-shadow"
-            >
-              <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-4xl font-bold" style={{
-                    background: 'linear-gradient(45deg, #FF4500, #FFA500, #8A56AC)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}>
-                    {project.category}
-                  </span>
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-medium text-gray-900">{project.title}</h3>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        </Link>
       </div>
     </div>
   );

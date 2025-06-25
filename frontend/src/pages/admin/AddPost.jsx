@@ -5,7 +5,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { 
   Loader, 
   X, 
-  Plus, 
   Upload, 
   Image as ImageIcon, 
   FileText, 
@@ -13,7 +12,6 @@ import {
   AlertCircle,
   ArrowLeft,
   Save,
-  Building,
   BookOpen,
   Check
 } from 'lucide-react';
@@ -80,7 +78,7 @@ const AddPostForm = ({ setView }) => {
     }));
     
     setImages(prev => [...prev, ...newImages]);
-  }, [images]);
+  }, [images, setUploadError]);
 
   const handleFileChange = useCallback((e) => {
     if (e.target.files?.length > 0) {
@@ -509,7 +507,7 @@ const AddPostForm = ({ setView }) => {
                 </button>
               ) : (
                 <button
-                  type="button"
+                  type="submit"
                   disabled={loading}
                   onClick={handleSubmit(onSubmit)}
                   className="flex items-center space-x-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"

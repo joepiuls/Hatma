@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Category from '../components/Category';
 import { motion } from 'framer-motion';
 import { trackEvent } from '../utils/trackEvent';
@@ -130,40 +130,11 @@ function Design() {
           <h2 className="text-2xl md:text-3xl font-bold text-[#1D1849] mb-6">
             Learn more about the many ways we can support your business
           </h2>
+          <Link to="/contact" className="inline-block mb-4">
           <button className="bg-[#1D1849] text-white font-bold py-3 px-8 rounded-md hover:bg-[#2a2468] transition-colors duration-300">
             BOOK A CONSULTATION
           </button>
-        </div>
-      </div>
-
-      {/* Portfolio Section */}
-      <div className="py-16 px-4 md:px-8 lg:px-16 bg-gray-50">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
-          Our work
-          <div className="w-16 h-1 bg-[#FFA500] mx-auto mt-2"></div>
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project, index) => (
-            <div key={index} className="flex flex-col">
-              <div className="relative bg-white border rounded-lg overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
-                <div className="relative">
-                  <img src={project.imageUrl} alt={project.title} className="w-full h-48 object-cover" />
-                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold tracking-wider" style={{ 
-                      background: 'linear-gradient(90deg, #FF4500, #FFA500, #8A56AC)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent'
-                    }}>
-                      {project.category}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-medium text-gray-700">{project.title}</h3>
-                </div>
-              </div>
-            </div>
-          ))}
+          </Link>
         </div>
       </div>
     </div>

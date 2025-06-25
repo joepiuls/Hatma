@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Frame from "../assets/Frame.png";
+import { Link } from "react-router-dom";
 
 const services = [
   {
@@ -10,16 +11,19 @@ const services = [
       "Trainings and Workshops",
     ],
     image: Frame,
+    link:'/services/brand-development',
   },
   {
     title: "Design Service",
     description: ["Web Design", "UI Design", "Brand Identity Design"],
     image: Frame,
+    link:'/services/branding',
   },
   {
     title: "Promotions",
     description: ["Content creation", "Campaign management", "Influencer marketing"],
     image: Frame,
+    link:'/services/digital-marketing',
   },
   {
     title: "Business Registration",
@@ -30,6 +34,7 @@ const services = [
       "Legal rights",
     ],
     image: Frame,
+    link:'/services/cac-registration',
   },
 ];
 
@@ -87,9 +92,11 @@ export default function ServicesSection() {
                     </li>
                   ))}
                 </ul>
+                <Link to={services[activeIndex].link} className="block mt-6">
                 <button className="mt-6 w-full bg-primary text-white font-medium py-3 rounded-xl hover:bg-primary/90 transition-all">
                   See Details
                 </button>
+                </Link>
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Category from '../components/Category';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { trackEvent } from '../utils/trackEvent';
 
@@ -177,11 +177,12 @@ function HatmaPrime() {
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 px-4">
           Want to elevate your brand? Become our partner today.
         </h2>
+        <Link to="/pricing" className="inline-block">
         <button 
-        onClick={handleClick}
         className="mt-4 md:mt-6 bg-[#FFA500] hover:bg-[#E69500] text-white font-semibold md:font-bold py-2 px-4 md:py-3 md:px-6 rounded-md transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
           GET STARTED
         </button>
+        </Link>
       </div>
 
       {/* Capabilities Section */}
@@ -197,45 +198,6 @@ function HatmaPrime() {
             <div key={index} className="border rounded-lg p-4 md:p-6 transition-all duration-300 hover:shadow-lg">
               <h3 className="text-base md:text-lg font-bold mb-2 md:mb-3 text-[#1D1849]">{capability.title}</h3>
               <p className="text-gray-600 text-sm md:text-base">{capability.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Portfolio Section */}
-      <div className="py-12 md:py-16 px-4 md:px-8 lg:px-16 bg-gray-50">
-        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-8 md:mb-12">
-          Our work
-          <div className="w-12 md:w-16 h-1 bg-[#FFA500] mx-auto mt-2"></div>
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {projects.map((project, index) => (
-            <div key={index} className="flex flex-col">
-              <div className="relative bg-white border rounded-lg overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
-                {project.imageUrl ? (
-                  <div className="relative aspect-square">
-                    <img 
-                      src={project.imageUrl} 
-                      alt={project.title} 
-                      className="w-full h-full object-cover" 
-                    />
-                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-                      <span className="text-white text-lg md:text-xl font-bold tracking-wider" style={{ 
-                        background: 'linear-gradient(90deg, #FF4500, #FFA500, #8A56AC)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                      }}>
-                        {project.category}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full aspect-square bg-gray-100"></div>
-                )}
-                <div className="p-3 md:p-4">
-                  <h3 className="text-xs md:text-sm font-medium text-gray-700">{project.title}</h3>
-                </div>
-              </div>
             </div>
           ))}
         </div>

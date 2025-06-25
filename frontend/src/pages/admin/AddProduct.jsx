@@ -17,7 +17,8 @@ import {
   Check,
   Star,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 import { useAdminProductStore } from '../../store/useAdminProductStore';
 import { useNavigate } from 'react-router-dom';
@@ -525,10 +526,11 @@ const AddProductForm = ({ setView }) => {
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">Option Values</label>
                             {variant.optionValues.map((value, valueIndex) => (
-                              <div key={valueIndex} className="flex items-center space-x-2">
+                              <div key={`${index}-${valueIndex}`} className="flex items-center space-x-2">
                                 <input
                                   type="text"
                                   value={value}
+                                  key={`input-${index}-${valueIndex}`}
                                   onChange={(e) => handleOptionValueChange(index, valueIndex, e.target.value)}
                                   placeholder={`Value ${valueIndex + 1}`}
                                   className="form-input flex-1"
