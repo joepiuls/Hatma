@@ -1,39 +1,42 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '../axios';
-import axios from 'axios';
 import { trackError } from '../utils/trackEvent';
 
 const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
+      accessToken: null, 
       isAuthenticated: false,
       error: null,
       loading: false,
+      hasHydrated: false,
 
-      // Clear errors and loading state
+      
       clearAuthState: () => set({ error: null, loading: false }),
 
-      setUser: (user)=>set({user}),
+      setUser: (user) => set({ user }),
+
+      
+      setHasHydrated: (state) => set({ hasHydrated: state }),
 
       signUp: async (data) => {
         set({ loading: true, error: null });
         try {
-          const { data: response } = await api.post('/auth/register', {
+          const response = await api.post('/auth/register', {
             name: data.name,
             email: data.email,
             password: data.password,
           });
 
-          if (!response.user || !response.token) {
+          if (!response.data.user || !response.data.accessToken) {
             throw new Error('Invalid server response');
           }
 
           set({
-            user: response.user,
-            token: response.token,
+            user: response.data.user,
+            accessToken: response.data.accessToken,
             isAuthenticated: true,
             loading: false,
           });
@@ -44,33 +47,30 @@ const useAuthStore = create(
           trackError(errorMessage, {
             action: 'signUp',
             user: data.email,
-            additionalInfo: {
-              name: data.name
-            }
+            additionalInfo: { name: data.name }
           });
           return { 
             success: false, 
             message: errorMessage || 'Signup failed. Please try again.' 
           };
-          
         }
       },
 
       login: async (data) => {
         set({ loading: true, error: null });
         try {
-          const { data: response } = await api.post('/auth/login', {
+          const response = await api.post('/auth/login', {
             email: data.email,
             password: data.password
           });
 
-          if (!response.user || !response.token) {
+          if (!response.data.user || !response.data.accessToken) {
             throw new Error('Invalid server response');
           }
 
           set({
-            user: response.user,
-            token: response.token,
+            user: response.data.user,
+            accessToken: response.data.accessToken,
             isAuthenticated: true,
             loading: false,
           });
@@ -81,9 +81,7 @@ const useAuthStore = create(
           trackError(errorMessage, {
             action: 'login',
             user: data.email,
-            additionalInfo: {
-              name: data.name
-            }
+            additionalInfo: { name: data.name }
           });
           return { 
             success: false, 
@@ -95,18 +93,18 @@ const useAuthStore = create(
       loginWithGoogle: async (tokenId) => {
         set({ loading: true, error: null });
         try {
-          const { data: response } = await axios.post("http://localhost:5000/api/auth/google-login", { tokenId });
+          const response = await api.post('/auth/google-login', { tokenId });
 
-          if (!response.token) {
-            throw new Error('No token returned from server');
+          if (!response.data.accessToken) {
+            throw new Error('No access token returned from server');
           }
 
           set({
-              user: response.user,
-              token: response.token,
-              isAuthenticated: true,
-              loading: false,
-            });
+            user: response.data.user,
+            accessToken: response.data.accessToken,
+            isAuthenticated: true,
+            loading: false,
+          });
 
           return { success: true, message: 'Logged in with Google successfully' };
         } catch (err) {
@@ -114,38 +112,44 @@ const useAuthStore = create(
           set({ error: errorMessage, loading: false });
           trackError(errorMessage, {
             action: 'loginWithGoogle',
-            user: data.email,
-            additionalInfo: {
-              name: data.name
-            }
+            user: 'unknown',
+            additionalInfo: { name: 'Google user' }
           });
           return {
             success: false,
             message: errorMessage || 'Google login failed. Please try again.',
           };
         }
-    },
+      },
 
-      logout: () => {
+      logout: async () => {
+        try {
+          // Call logout API
+          await api.post('/auth/logout');
+        } catch (err) {
+          console.error('Logout API error:', err);
+        }
+        
+        // Clear client-side state
         set({
           user: null,
-          token: null,
+          accessToken: null,
           isAuthenticated: false,
           error: null,
           loading: false,
         });
-        // Consider adding API call to invalidate token on server
+        
         return { success: true, message: 'You have logged out.' };
       },
 
       forgotPassword: async (email) => {
         set({ loading: true, error: null });
         try {
-          const { data: response } = await api.post('/auth/forgot-password', { email });
+          await api.post('/auth/forgot-password', { email });
           set({ loading: false });
           return { 
             success: true, 
-            message: response.message || 'Password reset email sent.' 
+            message: 'Password reset email sent.' 
           };
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -164,12 +168,11 @@ const useAuthStore = create(
       resetPassword: async (token, data) => {
         set({ loading: true, error: null });
         try {
-          const { data: response } = await api.post(`/auth/reset-password/${token}`,
-           {password:data.password});
+          await api.post(`/auth/reset-password/${token}`, { password: data.password });
           set({ loading: false });
           return { 
             success: true, 
-            message: response.message || 'Password reset successful.' 
+            message: 'Password reset successful.' 
           };
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -184,16 +187,68 @@ const useAuthStore = create(
           };
         }
       },
+
+      // Token refresh method
+      refreshToken: async () => {
+        try {
+          // This will automatically send the refreshToken cookie
+          const response = await api.post('/auth/refresh');
+          
+          if (response.data.accessToken) {
+            set({ accessToken: response.data.accessToken });
+            return response.data.accessToken;
+          }
+          return null;
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+          // Clear auth state on refresh failure
+          get().logout();
+          return null;
+        }
+      },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
+        accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      }
     }
   )
+);
+
+// Axios response interceptor for token refresh
+api.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config;
+    const auth = useAuthStore.getState();
+    
+    // Handle 401 errors (token expired)
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const newToken = await auth.refreshToken();
+        if (newToken) {
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('Refresh token failed:', refreshError);
+      }
+      
+
+      auth.logout();
+    }
+    
+    return Promise.reject(error);
+  }
 );
 
 export default useAuthStore;

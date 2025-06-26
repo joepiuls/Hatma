@@ -27,21 +27,12 @@ const app = express();
 
 app.use(express.json());
 
-const allowedOrigins = [
-  'http://localhost:5000', // for local dev
-  'https://hatma.onrender.com', // your production frontend URL
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow cookies, sessions if needed
-}));
+const corsOptions = {
+  origin: 'https://hatma.onrender.com',
+  credentials: true, // Required for cookies/auth headers
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // API Routes
 app.use('/api/auth', authRoutes);

@@ -34,9 +34,26 @@ import PortfolioDashboard from "./pages/admin/Portfolio";
 import Analytics from "./pages/admin/Analytics";
 import OurWork from "./components/ourWork";
 import { initTracking } from "./utils/trackEvent";
+import useAuthStore from "./store/useAuthStore";
 
 
 const App = () => {
+
+  useEffect(() => {
+  const checkTokenExpiration = () => {
+    const { accessToken, logout } = useAuthStore.getState();
+    if (accessToken) {
+      const decoded = jwt.decode(accessToken);
+      if (decoded.exp * 1000 < Date.now()) {
+        logout();
+      }
+    }
+  };
+  
+  // Check every 5 minutes
+  const interval = setInterval(checkTokenExpiration, 5 * 60 * 1000);
+  return () => clearInterval(interval);
+}, []);
   initTracking();
   return (
     <>
