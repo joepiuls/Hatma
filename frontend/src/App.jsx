@@ -35,6 +35,8 @@ import Analytics from "./pages/admin/Analytics";
 import OurWork from "./components/ourWork";
 import { initTracking } from "./utils/trackEvent";
 import useAuthStore from "./store/useAuthStore";
+import ProtectedRoute from "./utils/ProtectedRoute";
+import Unauthorized from "./components/Unautorized";
 
 
 const App = () => {
@@ -54,7 +56,15 @@ const App = () => {
   const interval = setInterval(checkTokenExpiration, 5 * 60 * 1000);
   return () => clearInterval(interval);
 }, []);
-  initTracking();
+
+useEffect(() => {
+  const { accessToken, refreshToken } = useAuthStore.getState();
+  if (!accessToken) {
+    refreshToken();
+  }
+}, []);
+  
+initTracking();
   return (
     <>
       <Toaster richColors position="top-right" />
@@ -67,7 +77,8 @@ const App = () => {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
 
-
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute adminOnly={true} />}>  
             <Route path="/admin" element={<AdminDashboardLayout />}>
               <Route index element={<Overview />}/>
               <Route path="products" element={<ProductDashboard />}/>
@@ -78,6 +89,7 @@ const App = () => {
               <Route path="info" element={<PortfolioDashboard />} />
               <Route path="analytics" element={<Analytics />} />
             </Route>
+            </Route>
 
 
           {/* Public routes with layout */}
@@ -87,7 +99,6 @@ const App = () => {
             <Route path="/about" element={<AboutSection />} />
             <Route path="/blog" element={<BlogSection />} />
             <Route path="/blog/:id" element={<BlogPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/faq" element={<Faq />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/work" element={<OurWork />} />
@@ -98,8 +109,12 @@ const App = () => {
             <Route path="/services/branding" element={<Design/>} />
             <Route path="/products/:id" element={<ProductPage />} />
             <Route path="/services/brand-development" element={<BrandDevelopment />} />
-            <Route path="/cart" element={<CartPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/cart" element={<CartPage />} />
+            </Route>
             <Route path="/order/:id" element={<OrderPage />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
