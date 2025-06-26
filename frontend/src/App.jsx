@@ -37,6 +37,7 @@ import { initTracking } from "./utils/trackEvent";
 import useAuthStore from "./store/useAuthStore";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Unauthorized from "./components/Unautorized";
+import { useEffect } from "react";
 
 
 const App = () => {
