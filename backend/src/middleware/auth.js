@@ -1,17 +1,37 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import TokenBlacklist from '../models/TokenBlacklist.js'; // Add this model
+import TokenBlacklist from '../models/TokenBlacklist.js';
+
+export const setTokenCookies = (res, accessToken, refreshToken) => {
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000 // 15 minutes
+  });
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/api/auth/refresh',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+};
 
 export const protect = async (req, res, next) => {
-  // 1. Get token from Authorization header
+  console.log('🛡️ Protect Middleware Triggered');
+  console.log('➡️ Cookies:', req.cookies);
+  console.log('➡️ Auth Header:', req.headers.authorization);
+
   let token = req.headers.authorization?.split(' ')[1];
 
-  // 2. Try to get token from cookies if not in header
   if (!token && req.cookies?.accessToken) {
     token = req.cookies.accessToken;
   }
 
   if (!token) {
+    console.warn('⛔ No token provided');
     return res.status(401).json({ 
       success: false,
       message: 'Not authorized, no token provided'
@@ -19,40 +39,39 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    // 3. Check if token is blacklisted
     const isBlacklisted = await TokenBlacklist.findOne({ token });
     if (isBlacklisted) {
+      console.warn('⛔ Token is blacklisted');
       return res.status(401).json({ 
         success: false,
         message: 'Token has been revoked'
       });
     }
 
-    // 4. Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // 5. Check token expiration separately
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const now = Date.now().valueOf() / 1000;
-    if (typeof decoded.exp !== 'undefined' && decoded.exp < now) {
+    if (decoded.exp && decoded.exp < now) {
+      console.warn('⛔ Token expired');
       return res.status(401).json({ 
         success: false,
         message: 'Token has expired'
       });
     }
 
-    // 6. Find user and attach to request
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
+      console.warn('⛔ User not found');
       return res.status(401).json({ 
         success: false,
         message: 'User not found'
       });
     }
 
+    console.log('✅ Authenticated user:', user.email);
     req.user = user;
     next();
   } catch (err) {
-    // Handle specific JWT errors
+    console.error('❌ Token verification error:', err);
     let message = 'Invalid token';
     if (err.name === 'TokenExpiredError') {
       message = 'Token has expired';
@@ -75,13 +94,12 @@ export const admin = (req, res, next) => {
       success: false,
       message: 'Admin access only' 
     });
-  };
+  }
 };
 
-// New middleware to refresh access tokens
 export const refreshTokenMiddleware = async (req, res, next) => {
   const refreshToken = req.cookies.refreshToken;
-  
+
   if (!refreshToken) {
     return res.status(401).json({ 
       success: false,
@@ -90,7 +108,6 @@ export const refreshTokenMiddleware = async (req, res, next) => {
   }
 
   try {
-    // Check if refresh token is blacklisted
     const isBlacklisted = await TokenBlacklist.findOne({ token: refreshToken });
     if (isBlacklisted) {
       return res.status(401).json({ 
@@ -99,10 +116,7 @@ export const refreshTokenMiddleware = async (req, res, next) => {
       });
     }
 
-    // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    
-    // Find user
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ 
@@ -111,14 +125,12 @@ export const refreshTokenMiddleware = async (req, res, next) => {
       });
     }
 
-    // Generate new access token
     const accessToken = jwt.sign(
       { id: user._id },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: '15m' }
     );
 
-    // Attach new token to response
     res.locals.newAccessToken = accessToken;
     res.locals.user = user;
     next();

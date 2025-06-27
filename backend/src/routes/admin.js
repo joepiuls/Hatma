@@ -459,31 +459,36 @@ router.get('/overview', async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // View analysis helper
-    async function getViewedItem(pagePrefix, Model, sortOrder = -1) {
-      const result = await AnalyticsEvents.aggregate([
-        { $match: { type: 'page_visit', 'metadata.page': { $regex: `^${pagePrefix}` } } },
-        { $group: { _id: '$metadata.page', count: { $sum: 1 } } },
-        { $sort: { count: sortOrder } },
-        { $limit: 1 }
-      ]);
+ async function getViewedItem(pagePrefix, Model, sortOrder = -1) {
+  const result = await AnalyticsEvents.aggregate([
+    { $match: { type: 'page_visit', 'metadata.page': { $regex: `^${pagePrefix}` } } },
+    { $group: { _id: '$metadata.page', count: { $sum: 1 } } },
+    { $sort: { count: sortOrder } },
+    { $limit: 1 }
+  ]);
 
-      if (result.length === 0) return null;
+  if (result.length === 0) return null;
 
-      const id = result[0]._id.split('/').pop();
-      const item = await Model.findById(id).lean();
-      if (!item) return null;
+  const segments = result[0]._id.split('/').filter(Boolean); // remove empty parts
+  const id = segments.pop();
 
-      return {
-        ...item,
-        views: result[0].count
-      };
-    }
+  if (!id || id.length !== 24) return null;
 
-    const mostViewedProduct = await getViewedItem('/products/', Product, -1);
-    const leastViewedProduct = await getViewedItem('/products/', Product, 1);
-    const mostViewedBlog = await getViewedItem('/blog/', Blog, -1);
-    const leastViewedBlog = await getViewedItem('/blog/', Blog, 1);
+  const item = await Model.findById(id).lean();
+  if (!item) return null;
+
+  return {
+    ...item,
+    views: result[0].count
+  };
+}
+
+// You can now call getViewedItem safely:
+const mostViewedProduct = await getViewedItem('/products/', Product, -1);
+const leastViewedProduct = await getViewedItem('/products/', Product, 1);
+const mostViewedBlog = await getViewedItem('/blog/', Blog, -1);
+const leastViewedBlog = await getViewedItem('/blog/', Blog, 1);
+
 
     // Form analytics - NEW SECTION
     const formSubmissionDetails = await Request.aggregate([
