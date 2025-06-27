@@ -38,7 +38,7 @@ import useAuthStore from "./store/useAuthStore";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Unauthorized from "./components/Unautorized";
 import { useEffect } from "react";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const App = () => {
   // Initialize tracking
