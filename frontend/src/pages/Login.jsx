@@ -15,6 +15,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const {login, loading, user} = useAuthStore();
 
+
   const navigate = useNavigate();
 
   const {
@@ -125,11 +126,8 @@ const Login = () => {
         disabled={loading}
         className="w-full flex justify-center 
          mt-4 font-semibold">
-         {loading ? <LoaderCircle className="animate-spin" />  : 
-         <div>
            <Googlelogin /> 
-          </div>}
-        </button>
+       </button>
 
         {/* Sign Up Link */}
         <p className="text-center mt-4 text-sm">
