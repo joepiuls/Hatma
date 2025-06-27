@@ -15,12 +15,12 @@ const Hero = () => {
       {/* Hero Content */}
       <div className="max-w-2xl z-10">
         <h1 className="text-5xl font-bold mb-6 ">
-          Transforming Ideas into Branding Success
+          Helping SMEs Build Successful Brands 
         </h1>
         <p className="text-lg text-gray-300 px-4 leading-tight">
-        With our tailored services and e-commerce solutions, you're not just accessing tools; 
-        you're investing in empowerment and excellence. 
-        We help you grow with solutions designed to elevate your brand and boost your success.
+        With our tailored services and e-commerce for small and medium-sized enterprises (SMEs), 
+        you're not just accessing tools; you're investing in growth to build your brand, expand your reach, 
+        and evolve with the digital era.
         </p>
 
         {!user && <Link to={"/signup"}>

@@ -142,7 +142,7 @@ const Shop = () => {
               className="text-xl max-w-xl"
               style={{ color: colors.gray3 }}
             >
-              Explore cutting-edge gadgets curated to elevate your digital experience. Premium quality, innovative design.
+              Discover innovative gadgets, Business tools, and premium resources designed to elevate your brand in the digital era.
             </motion.p>
             
             <motion.div 

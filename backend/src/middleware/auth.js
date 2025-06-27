@@ -7,7 +7,7 @@ export const setTokenCookies = (res, accessToken, refreshToken) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 15 * 60 * 1000 // 15 minutes
+    maxAge: 15 * 60 * 1000 
   });
 
   res.cookie('refreshToken', refreshToken, {
@@ -15,7 +15,7 @@ export const setTokenCookies = (res, accessToken, refreshToken) => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/api/auth/refresh',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000 
   });
 };
 
