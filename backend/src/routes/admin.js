@@ -309,7 +309,7 @@ router.get('/analytics', protect, admin, async (req, res) => {
   }
 });
 
-router.get('/overview', async (req, res) => {
+router.get('/overview', protect, admin, async (req, res) => {
   try {
     const now = new Date();
     const pastDate = new Date(now);
