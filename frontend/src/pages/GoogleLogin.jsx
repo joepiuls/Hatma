@@ -1,4 +1,3 @@
-// src/components/GoogleLogin.jsx
 import React from 'react';
 import useAuthStore from '../store/useAuthStore';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
@@ -6,7 +5,7 @@ import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { trackEvent } from '../utils/trackEvent';
 
-const Googlelogin = () => {
+const GoogleLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loginWithGoogle, user } = useAuthStore();
@@ -37,4 +36,4 @@ const Googlelogin = () => {
   );
 };
 
-export default Googlelogin;
+export default GoogleLogin;
