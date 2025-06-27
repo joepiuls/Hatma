@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -37,60 +38,23 @@ import { initTracking } from "./utils/trackEvent";
 import useAuthStore from "./store/useAuthStore";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Unauthorized from "./components/Unautorized";
-import { useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
 
 const App = () => {
-  // Initialize tracking
   initTracking();
-  
-  // Get auth state and actions
-  const { accessToken, refreshToken, logout, hasHydrated } = useAuthStore();
+  const { hasHydrated } = useAuthStore();
 
-  // Token expiration check
-  useEffect(() => {
-    if (!accessToken || !hasHydrated) return;
-
-    const checkTokenExpiration = () => {
-      try {
-        const decoded = jwtDecode(accessToken);
-        if (decoded.exp * 1000 < Date.now()) {
-          logout();
-        }
-      } catch (error) {
-        console.error("Token expiration check failed:", error);
-      }
-    };
-
-    // Check immediately on mount
-    checkTokenExpiration();
-    
-    // Then check every 5 minutes
-    const interval = setInterval(checkTokenExpiration, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [accessToken, hasHydrated, logout]);
-
-  // Silent token refresh on app load
-  useEffect(() => {
-    if (!accessToken && hasHydrated) {
-      refreshToken().catch(error => {
-        console.log("Silent refresh failed:", error);
-      });
-    }
-  }, [accessToken, hasHydrated, refreshToken]);
+  if (!hasHydrated) return null;
 
   return (
     <>
       <Toaster richColors position="top-right" />
       <Router>
         <Routes>
-          {/* Auth-related routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Admin routes - protected and admin-only */}
           <Route element={<ProtectedRoute adminOnly={true} />}>
             <Route path="/admin" element={<AdminDashboardLayout />}>
               <Route index element={<Overview />} />
@@ -104,7 +68,6 @@ const App = () => {
             </Route>
           </Route>
 
-          {/* Public routes with layout */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
@@ -116,27 +79,17 @@ const App = () => {
             <Route path="/work" element={<OurWork />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services/hatma-prime" element={<HatmaPrime />} />
-            <Route
-              path="/services/digital-marketing"
-              element={<DigitalMarketing />}
-            />
-            <Route
-              path="/services/cac-registration"
-              element={<CACRegisteration />}
-            />
+            <Route path="/services/digital-marketing" element={<DigitalMarketing />} />
+            <Route path="/services/cac-registration" element={<CACRegisteration />} />
             <Route path="/services/branding" element={<Design />} />
             <Route path="/products/:id" element={<ProductPage />} />
-            <Route
-              path="/services/brand-development"
-              element={<BrandDevelopment />}
-            />
-            
-            {/* User-only protected routes */}
+            <Route path="/services/brand-development" element={<BrandDevelopment />} />
+
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/cart" element={<CartPage />} />
             </Route>
-            
+
             <Route path="/order/:id" element={<OrderPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />

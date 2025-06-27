@@ -1,22 +1,20 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/Logo.png";
 import { LoaderCircle } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
-import Googlelogin from "./GoogleLogin";
+import Googlelogin from "../components/GoogleLogin";
 import { trackEvent } from "../utils/trackEvent";
-
-
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const {login, loading, user} = useAuthStore();
-
-
+  const { login, loading, user } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     register,
@@ -24,41 +22,41 @@ const Login = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async(data) => {
+  const onSubmit = async (data) => {
     const res = await login(data);
-    if(res.success === true) {
-      await trackEvent('session', { action: 'login', userId: res?.user._id, email: res?.user.email });
-      navigate('/');
+    if (res.success === true) {
+      await trackEvent("session", {
+        action: "login",
+        userId: user._id,
+        email: user.email,
+      });
+
+      const redirectTo = new URLSearchParams(location.search).get("redirectTo") || "/";
+      navigate(redirectTo);
       toast.success(res.message);
-    } else{
+    } else {
       toast.error(res.message);
     }
   };
 
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 relative pb-10">
-      {/* Top Bar */}
       <div className="w-full bg-white py-4 px-6 flex justify-center items-center z-10">
         <header className="w-full max-w-6xl flex justify-between items-center">
           <div className="flex items-center space-x-2">
-          <Link to={"/"}>
-             <img src={logo}  alt="Logo" className="w-[200px] h-auto" />
-          </Link>
+            <Link to={"/"}>
+              <img src={logo} alt="Logo" className="w-[200px] h-auto" />
+            </Link>
           </div>
         </header>
       </div>
 
-      {/* Dark Blue Background - Centered with Rounded Edges */}
       <div className="absolute top-16 w-11/12 max-w-6xl bg-primary h-60 rounded-xl flex justify-center items-center shadow-md"></div>
 
-      {/* Login Card */}
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full relative z-10 mt-20">
         <h2 className="text-2xl font-semibold text-center mb-6">Welcome Back</h2>
 
-        {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Email Field */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-600">Email</label>
             <input
@@ -78,7 +76,6 @@ const Login = () => {
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
           </div>
 
-          {/* Password Field */}
           <div className="mb-4 relative">
             <label className="block text-sm font-medium text-gray-600">Password</label>
             <input
@@ -105,33 +102,33 @@ const Login = () => {
             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
           </div>
 
-          {/* Forgot Password */}
           <div className="text-right mb-4 text-sm">
-            <Link to="/forgot-password" className="text-red-500 hover:underline">Forgot password</Link>
+            <Link to="/forgot-password" className="text-red-500 hover:underline">
+              Forgot password
+            </Link>
           </div>
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-yellow-500 text-white py-2 flex justify-center
-            rounded-md font-semibold hover:bg-yellow-600 transition"
+            className="w-full bg-yellow-500 text-white py-2 flex justify-center rounded-md font-semibold hover:bg-yellow-600 transition"
           >
-            {loading ? <LoaderCircle className="animate-spin" /> : 'Login'}
+            {loading ? <LoaderCircle className="animate-spin" /> : "Login"}
           </button>
         </form>
 
-        {/* Google Login */}
         <button
-        disabled={loading}
-        className="w-full flex justify-center 
-         mt-4 font-semibold">
-           <Googlelogin /> 
-       </button>
+          disabled={loading}
+          className="w-full flex justify-center mt-4 font-semibold"
+        >
+          <Googlelogin />
+        </button>
 
-        {/* Sign Up Link */}
         <p className="text-center mt-4 text-sm">
-          Don’t have an account? <Link to={'/signup'} className="text-yellow-500 font-semibold hover:underline">Signup</Link>
+          Don’t have an account?{' '}
+          <Link to={'/signup'} className="text-yellow-500 font-semibold hover:underline">
+            Signup
+          </Link>
         </p>
       </div>
     </div>

@@ -1,32 +1,31 @@
+// src/api.js
 import axios from 'axios';
-import useAuthStore from './store/useAuthStore';
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
 });
 
-api.interceptors.request.use(async (config) => {
-  // Wait for Zustand hydration to complete
-  await new Promise(resolve => {
-    const unsubscribe = useAuthStore.subscribe(
-      state => {
-        if (state.hasHydrated) resolve();
-      },
-      state => state.hasHydrated
-    );
-    
-    // If already hydrated, resolve immediately
-    if (useAuthStore.getState().hasHydrated) resolve();
-    return unsubscribe;
-  });
+// Auto-refresh access token if expired
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-  const token = useAuthStore.getState().token;
-  
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error('Refresh token failed:', refreshError);
+      }
+    }
+
+    return Promise.reject(error);
   }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+);

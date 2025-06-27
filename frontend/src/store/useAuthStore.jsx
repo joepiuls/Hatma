@@ -1,3 +1,4 @@
+// src/store/useAuthStore.js
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '../axios';
@@ -7,39 +8,47 @@ const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
-      accessToken: null, 
       isAuthenticated: false,
       error: null,
       loading: false,
       hasHydrated: false,
 
-      
       clearAuthState: () => set({ error: null, loading: false }),
 
       setUser: (user) => set({ user }),
 
-      
       setHasHydrated: (state) => set({ hasHydrated: state }),
+
+      hydrateSession: async () => {
+        try {
+          const response = await api.post('/auth/refresh');
+          if (response.data.user) {
+            set({
+              user: response.data.user,
+              isAuthenticated: true,
+            });
+          }
+        } catch (err) {
+          console.error('Session hydration failed:', err);
+          get().logout();
+        }
+      },
 
       signUp: async (data) => {
         set({ loading: true, error: null });
         try {
-          const response = await api.post('/auth/register', {
-            name: data.name,
-            email: data.email,
-            password: data.password,
-          });
+          const response = await api.post('/auth/register', data);
 
-          if (!response.data.user || !response.data.accessToken) {
+          if (!response.data.user) {
             throw new Error('Invalid server response');
           }
 
           set({
             user: response.data.user,
-            accessToken: response.data.accessToken,
             isAuthenticated: true,
             loading: false,
           });
+
           return { success: true, message: 'Signed up successfully' };
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -49,9 +58,9 @@ const useAuthStore = create(
             user: data.email,
             additionalInfo: { name: data.name }
           });
-          return { 
-            success: false, 
-            message: errorMessage || 'Signup failed. Please try again.' 
+          return {
+            success: false,
+            message: errorMessage || 'Signup failed. Please try again.'
           };
         }
       },
@@ -59,35 +68,29 @@ const useAuthStore = create(
       login: async (data) => {
         set({ loading: true, error: null });
         try {
-          const response = await api.post('/auth/login', {
-            email: data.email,
-            password: data.password
-          });
+          const response = await api.post('/auth/login', data);
 
-          if (!response.data.user || !response.data.accessToken) {
+          if (!response.data.user) {
             throw new Error('Invalid server response');
           }
 
-          console.log('Login response:', response.data);
-
           set({
             user: response.data.user,
-            accessToken: response.data.accessToken,
             isAuthenticated: true,
             loading: false,
           });
+
           return { success: true, message: 'Login successful!' };
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
           set({ error: errorMessage, loading: false });
           trackError(errorMessage, {
             action: 'login',
-            user: data.email,
-            additionalInfo: { name: data.name }
+            user: data.email
           });
-          return { 
-            success: false, 
-            message: errorMessage || 'Login failed. Please check your credentials.' 
+          return {
+            success: false,
+            message: errorMessage || 'Login failed. Please check your credentials.'
           };
         }
       },
@@ -97,13 +100,12 @@ const useAuthStore = create(
         try {
           const response = await api.post('/auth/google-login', { tokenId });
 
-          if (!response.data.accessToken) {
-            throw new Error('No access token returned from server');
+          if (!response.data.user) {
+            throw new Error('Invalid Google login response');
           }
 
           set({
             user: response.data.user,
-            accessToken: response.data.accessToken,
             isAuthenticated: true,
             loading: false,
           });
@@ -114,33 +116,29 @@ const useAuthStore = create(
           set({ error: errorMessage, loading: false });
           trackError(errorMessage, {
             action: 'loginWithGoogle',
-            user: 'unknown',
-            additionalInfo: { name: 'Google user' }
+            user: 'unknown'
           });
           return {
             success: false,
-            message: errorMessage || 'Google login failed. Please try again.',
+            message: errorMessage || 'Google login failed. Please try again.'
           };
         }
       },
 
       logout: async () => {
         try {
-          // Call logout API
           await api.post('/auth/logout');
         } catch (err) {
           console.error('Logout API error:', err);
         }
-        
-        // Clear client-side state
+
         set({
           user: null,
-          accessToken: null,
           isAuthenticated: false,
           error: null,
           loading: false,
         });
-        
+
         return { success: true, message: 'You have logged out.' };
       },
 
@@ -149,9 +147,9 @@ const useAuthStore = create(
         try {
           await api.post('/auth/forgot-password', { email });
           set({ loading: false });
-          return { 
-            success: true, 
-            message: 'Password reset email sent.' 
+          return {
+            success: true,
+            message: 'Password reset email sent.'
           };
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -162,7 +160,7 @@ const useAuthStore = create(
           });
           return {
             success: false,
-            message: errorMessage || 'Failed to send reset email.',
+            message: errorMessage || 'Failed to send reset email.'
           };
         }
       },
@@ -172,9 +170,9 @@ const useAuthStore = create(
         try {
           await api.post(`/auth/reset-password/${token}`, { password: data.password });
           set({ loading: false });
-          return { 
-            success: true, 
-            message: 'Password reset successful.' 
+          return {
+            success: true,
+            message: 'Password reset successful.'
           };
         } catch (err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -185,25 +183,17 @@ const useAuthStore = create(
           });
           return {
             success: false,
-            message: errorMessage || 'Reset failed. Token may be invalid or expired.',
+            message: errorMessage || 'Reset failed. Token may be invalid or expired.'
           };
         }
       },
 
-      // Token refresh method
       refreshToken: async () => {
         try {
-          // This will automatically send the refreshToken cookie
           const response = await api.post('/auth/refresh');
-          
-          if (response.data.accessToken) {
-            set({ accessToken: response.data.accessToken });
-            return response.data.accessToken;
-          }
-          return null;
+          return response.data.accessToken || null;
         } catch (error) {
           console.error('Token refresh failed:', error);
-          // Clear auth state on refresh failure
           get().logout();
           return null;
         }
@@ -213,44 +203,14 @@ const useAuthStore = create(
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
+        state?.hydrateSession?.();
       }
     }
   )
-);
-
-
-api.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config;
-    const auth = useAuthStore.getState();
-    
-    // Handle 401 errors (token expired)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const newToken = await auth.refreshToken();
-        if (newToken) {
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        console.error('Refresh token failed:', refreshError);
-      }
-      
-
-      auth.logout();
-    }
-    
-    return Promise.reject(error);
-  }
 );
 
 export default useAuthStore;
