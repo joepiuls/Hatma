@@ -7,7 +7,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/Logo.png";
 import { LoaderCircle } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
-import GoogleLogin from "./GoogleLogin";
+import Googlelogin from "./GoogleLogin";
 import { trackEvent } from "../utils/trackEvent";
 
 const Login = () => {
@@ -121,7 +121,7 @@ const Login = () => {
           disabled={loading}
           className="w-full flex justify-center mt-4 font-semibold"
         >
-          <GoogleLogin />
+          <Googlelogin />
         </button>
 
         <p className="text-center mt-4 text-sm">

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { trackEvent } from '../utils/trackEvent';
 
-const GoogleLogin = () => {
+const Googlelogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loginWithGoogle, user } = useAuthStore();
@@ -36,4 +36,4 @@ const GoogleLogin = () => {
   );
 };
 
-export default GoogleLogin;
+export default Googlelogin;
