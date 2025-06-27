@@ -20,10 +20,6 @@ export const setTokenCookies = (res, accessToken, refreshToken) => {
 };
 
 export const protect = async (req, res, next) => {
-  console.log('🛡️ Protect Middleware Triggered');
-  console.log('➡️ Cookies:', req.cookies);
-  console.log('➡️ Auth Header:', req.headers.authorization);
-
   let token = req.headers.authorization?.split(' ')[1];
 
   if (!token && req.cookies?.accessToken) {
