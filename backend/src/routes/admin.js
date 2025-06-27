@@ -309,8 +309,7 @@ router.get('/analytics', protect, admin, async (req, res) => {
   }
 });
 
-
-router.get('/overview', protect, admin, async (req, res) => {
+router.get('/overview', async (req, res) => {
   try {
     const now = new Date();
     const pastDate = new Date(now);
@@ -597,6 +596,7 @@ router.get('/overview', protect, admin, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch analytics overview' });
   }
 });
+
 
 router.get('/sales-overview', protect, admin, async (req, res) => {
   try {
