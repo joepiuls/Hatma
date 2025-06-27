@@ -318,13 +318,10 @@ router.post('/login', async (req, res) => {
 
 router.post('/refresh', async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-  
-  if (!refreshToken) {
-    return res.status(401).json({ 
-      success: false,
-      error: 'Refresh token missing' 
-    });
-  }
+
+if (!req.cookies || !refreshToken) {
+  return res.status(401).json({ success: false, error: 'Refresh token missing' });
+}
 
   try {
     // Verify refresh token

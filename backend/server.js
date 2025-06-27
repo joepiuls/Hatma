@@ -17,6 +17,7 @@ import notificationRoutes from './src/routes/notifications.js';
 import { createServer } from 'http'; // Added for WebSocket integration
 import { WebSocketServer } from 'ws';
 import path from 'path'; // Added for static file serving
+import cookieParser from 'cookie-parser';
 
 // Initialize environment variables first
 dotenv.config();
@@ -26,7 +27,7 @@ const app = express();
 
 
 app.use(express.json());
-
+app.use(cookieParser()); 
 const corsOptions = {
   origin: 'https://hatma.onrender.com',
   credentials: true, // Required for cookies/auth headers

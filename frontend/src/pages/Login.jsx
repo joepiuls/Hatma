@@ -27,7 +27,7 @@ const Login = () => {
   const onSubmit = async(data) => {
     const res = await login(data);
     if(res.success === true) {
-      await trackEvent('session', { action: 'login', userId: user._id, email: user.email });
+      await trackEvent('session', { action: 'login', userId: res?.user._id, email: res?.user.email });
       navigate('/');
       toast.success(res.message);
     } else{
