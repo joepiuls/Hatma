@@ -68,6 +68,8 @@ const useAuthStore = create(
             throw new Error('Invalid server response');
           }
 
+          console.log('Login response:', response.data);
+
           set({
             user: response.data.user,
             accessToken: response.data.accessToken,
@@ -221,7 +223,7 @@ const useAuthStore = create(
   )
 );
 
-// Axios response interceptor for token refresh
+
 api.interceptors.response.use(
   response => response,
   async error => {

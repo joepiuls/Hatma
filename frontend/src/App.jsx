@@ -38,34 +38,47 @@ import useAuthStore from "./store/useAuthStore";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Unauthorized from "./components/Unautorized";
 import { useEffect } from "react";
-
+import jwtDecode from "jwt-decode";
 
 const App = () => {
+  // Initialize tracking
+  initTracking();
+  
+  // Get auth state and actions
+  const { accessToken, refreshToken, logout, hasHydrated } = useAuthStore();
 
+  // Token expiration check
   useEffect(() => {
-  const checkTokenExpiration = () => {
-    const { accessToken, logout } = useAuthStore.getState();
-    if (accessToken) {
-      const decoded = jwt.decode(accessToken);
-      if (decoded.exp * 1000 < Date.now()) {
-        logout();
-      }
-    }
-  };
-  
-  // Check every 5 minutes
-  const interval = setInterval(checkTokenExpiration, 5 * 60 * 1000);
-  return () => clearInterval(interval);
-}, []);
+    if (!accessToken || !hasHydrated) return;
 
-useEffect(() => {
-  const { accessToken, refreshToken } = useAuthStore.getState();
-  if (!accessToken) {
-    refreshToken();
-  }
-}, []);
-  
-initTracking();
+    const checkTokenExpiration = () => {
+      try {
+        const decoded = jwtDecode(accessToken);
+        if (decoded.exp * 1000 < Date.now()) {
+          logout();
+        }
+      } catch (error) {
+        console.error("Token expiration check failed:", error);
+      }
+    };
+
+    // Check immediately on mount
+    checkTokenExpiration();
+    
+    // Then check every 5 minutes
+    const interval = setInterval(checkTokenExpiration, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [accessToken, hasHydrated, logout]);
+
+  // Silent token refresh on app load
+  useEffect(() => {
+    if (!accessToken && hasHydrated) {
+      refreshToken().catch(error => {
+        console.log("Silent refresh failed:", error);
+      });
+    }
+  }, [accessToken, hasHydrated, refreshToken]);
+
   return (
     <>
       <Toaster richColors position="top-right" />
@@ -77,21 +90,19 @@ initTracking();
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute adminOnly={true} />}>  
+          {/* Admin routes - protected and admin-only */}
+          <Route element={<ProtectedRoute adminOnly={true} />}>
             <Route path="/admin" element={<AdminDashboardLayout />}>
-              <Route index element={<Overview />}/>
-              <Route path="products" element={<ProductDashboard />}/>
-              <Route path="blog" element={<PostsDashboard />}/>
-              <Route path="add-blog" element={<AddPostForm />}/>
+              <Route index element={<Overview />} />
+              <Route path="products" element={<ProductDashboard />} />
+              <Route path="blog" element={<PostsDashboard />} />
+              <Route path="add-blog" element={<AddPostForm />} />
               <Route path="sales" element={<Sales />} />
               <Route path="orders" element={<Forms />} />
               <Route path="info" element={<PortfolioDashboard />} />
               <Route path="analytics" element={<Analytics />} />
             </Route>
-            </Route>
-
+          </Route>
 
           {/* Public routes with layout */}
           <Route element={<MainLayout />}>
@@ -105,15 +116,27 @@ initTracking();
             <Route path="/work" element={<OurWork />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services/hatma-prime" element={<HatmaPrime />} />
-            <Route path="/services/digital-marketing" element={<DigitalMarketing />} />
-            <Route path="/services/cac-registration" element={<CACRegisteration />} />
-            <Route path="/services/branding" element={<Design/>} />
+            <Route
+              path="/services/digital-marketing"
+              element={<DigitalMarketing />}
+            />
+            <Route
+              path="/services/cac-registration"
+              element={<CACRegisteration />}
+            />
+            <Route path="/services/branding" element={<Design />} />
             <Route path="/products/:id" element={<ProductPage />} />
-            <Route path="/services/brand-development" element={<BrandDevelopment />} />
+            <Route
+              path="/services/brand-development"
+              element={<BrandDevelopment />}
+            />
+            
+            {/* User-only protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/cart" element={<CartPage />} />
             </Route>
+            
             <Route path="/order/:id" element={<OrderPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />
