@@ -609,7 +609,6 @@ router.get('/sales-overview', protect, admin, async (req, res) => {
     const pastDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const prevWeek = new Date(pastDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Aggregated revenue & transactions
     const [salesNowAgg] = await Order.aggregate([
       { $match: { createdAt: { $gte: pastDate, $lt: now } } },
       {
@@ -653,7 +652,6 @@ router.get('/sales-overview', protect, admin, async (req, res) => {
       }
     };
 
-    // Product sales trend by date
     const productSalesTrends = await Order.aggregate([
       {
         $group: {
@@ -664,41 +662,41 @@ router.get('/sales-overview', protect, admin, async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Fetch all orders for the period
     const ordersAll = await Order.find({ createdAt: { $gte: pastDate, $lt: now } }).populate('user').lean();
-    const order = await Order.findOne({});
 
     const pendingOrders = ordersAll.filter(o => o.paymentStatus === 'pending').length;
     const failedPayments = ordersAll.filter(o => o.paymentStatus === 'failed').length;
 
     const categoryRevenueMap = {};
     const productRevenueMap = {};
-    let categoryColors = {
+    const categoryColors = {
       'Electronics': '#3B82F6',
       'Accessories': '#10B981',
       'Software': '#8B5CF6',
       'Services': '#F59E0B'
     };
 
-    order.items?.forEach(p => {
-  if (!p?.category || !p?.price || !p?.quantity || !p?.name) return;
+    ordersAll.forEach(order => {
+      if (!Array.isArray(order.items)) return;
 
-  // Category sales
-  categoryRevenueMap[p.category] = (categoryRevenueMap[p.category] || 0) + (p.price * p.quantity);
+      order.items.forEach(p => {
+        if (!p?.category || !p?.price || !p?.quantity || !p?.name) return;
 
-  // Product sales
-  const key = p.name;
-  if (!productRevenueMap[key]) {
-    productRevenueMap[key] = {
-      name: p.name,
-      value: 0,
-      sales: 0,
-      color: '#000'
-    };
-  }
-  productRevenueMap[key].value += p.price * p.quantity;
-  productRevenueMap[key].sales += p.quantity;
-});
+        categoryRevenueMap[p.category] = (categoryRevenueMap[p.category] || 0) + (p.price * p.quantity);
+
+        const key = p.name;
+        if (!productRevenueMap[key]) {
+          productRevenueMap[key] = {
+            name: p.name,
+            value: 0,
+            sales: 0,
+            color: '#000'
+          };
+        }
+        productRevenueMap[key].value += p.price * p.quantity;
+        productRevenueMap[key].sales += p.quantity;
+      });
+    });
 
     const totalRev = Object.values(categoryRevenueMap).reduce((sum, val) => sum + val, 0);
 
@@ -712,7 +710,7 @@ router.get('/sales-overview', protect, admin, async (req, res) => {
     const products = Object.values(productRevenueMap)
       .map(p => ({
         ...p,
-        color: categoryColors['Accessories'] // Default/fallback color
+        color: categoryColors['Accessories']
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
@@ -720,7 +718,7 @@ router.get('/sales-overview', protect, admin, async (req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 }).limit(6).populate('user').lean();
 
     const recentOrders = orders.map((order) => ({
-      id: order._id || order._id.toString(),
+      id: order._id?.toString() || 'N/A',
       customer: `${order.user?.firstName || 'N/A'} ${order.user?.lastName || ''}`.trim(),
       product: order.items?.[0]?.name || 'N/A',
       date: new Date(order.createdAt).toLocaleString(),
@@ -745,6 +743,7 @@ router.get('/sales-overview', protect, admin, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch sales overview' });
   }
 });
+
 
 router.patch('/order/payment-status/:id', protect, admin, async (req, res) => {
   const { id } = req.params;
