@@ -20,4 +20,8 @@
   .animate-marquee-reverse {
     animation: marquee-reverse 10s linear infinite;
   }
+
+  body {
+  font-family: 'Inter', sans-serif;
+}
   
